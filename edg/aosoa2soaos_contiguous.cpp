@@ -1,7 +1,6 @@
 // SoA structure with an AoS interface using P2996 reflection and P3294 token
 // injection. Each array in the SoA is allocated in a contiguous storage
 // container.
-// Run here: https://godbolt.org/z/P613hh8MG
 
 #define __cpp_lib_reflection 20240815
 
@@ -46,13 +45,6 @@ consteval auto gen_sor_members(std::meta::info t) -> void {
         const mdspan<typename[:\(scalar_type):], \id(name_of(member), "_extents"sv), layout_stride> \id(
             name_of(member));
       });
-
-      // queue_injection(^{ using \id("m_extents"sv) = extents<size_t, 2, 2>; });
-      // queue_injection(^{
-      //   const mdspan<float, extents<size_t, 2ul, 2ul>,
-      //                     // const mdspan<float, extents<size_t, std::dynamic_extent, std::dynamic_extent>,
-      //                     layout_stride, std::default_accessor<float>> \id("m"sv);
-      // });
     } else if (type_is_container(type)) {
       queue_injection(^{ const std::span<typename[:\(scalar_type):]>  \id(name_of(member)); });
     } else { // scalar
@@ -230,28 +222,6 @@ public:
           };
           member_data_tokens += ^{
             .\id(name) = { \tokens(sov_name).data() + idx, {\tokens(extents){}, \tokens(stride)} }
-
-            // .\id(name) = mdspan<typename[:\(get_scalar_type(type)):], \tokens(extents), layout_stride> {
-            //   \tokens(sov_name).data() + idx, {
-            //     \tokens(extents){}, \tokens(stride)
-            //   }
-            // }
-
-            // .\id(name) = {
-            //   \tokens(sov_name).data() + m_idx,
-            //   {extents<size_t, 2, 2>{}, std::array<size_t, 2>{_size * \(dim), _size}}
-            // }
-
-            // .\id(name) = {
-            //     \id("_m"sv).data(), {extents<size_t, 2ul, 2ul>{}, std::array<size_t, 2>{3 * 2, 3}} }
-
-            // .m = mdspan<float, extents<size_t, 2, 2>, layout_stride, std::default_accessor<float>> {
-            //   test, {
-            //     extents<size_t, 2ul, 2ul>{}, std::array<size_t, 2> {
-            //       3 * 2, 3
-            //     }
-            //   }
-            // }
           };
         } else if (type_is_container(type)) {
           auto md_name = ^{ \id("_"sv, name, "_md"sv) };
@@ -302,7 +272,6 @@ int main() {
       std::cout << "{";
       for (size_t k = 0; k < md.extent(1); k++) {
         if (k != 0) std::cout << ", ";
-        // std::cout << md[j, k];
         std::cout << md(j, k);
       }
       std::cout << "}";
