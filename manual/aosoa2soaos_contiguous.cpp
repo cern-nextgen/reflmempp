@@ -1,47 +1,19 @@
+#include "utils.h"
+
+#include <array>
 #include <iostream>
 #include <span>
 #include <vector>
 
 using namespace std::literals::string_view_literals;
 
-template <class T> static constexpr bool is_vector_v = requires {
-  requires std::same_as<std::decay_t<T>, std::vector<typename std::decay_t<T>::value_type>>;
-};
-
-template <typename T> void print_vector(T &v) {
-  std::cout << "{";
-  for (size_t i = 0; i < v.size(); i++) {
-    if (i != 0)
-      std::cout << ", ";
-
-    if constexpr (is_vector_v<typename T::value_type>) {
-      print_vector(v[i]);
-    } else {
-      std::cout << v[i];
-    }
-  }
-  std::cout << "}";
-}
-
-template <typename T> void print_vector_addr(T &v) {
-  std::cout << "{";
-  for (size_t i = 0; i < v.size(); i++) {
-    if (i != 0)
-      std::cout << ", ";
-
-    if constexpr (is_vector_v<typename T::value_type>) {
-      print_vector(v[i]);
-    } else {
-      std::cout << (long long)&v[i];
-    }
-  }
-  std::cout << "}";
-}
+constexpr size_t mDim = 2;
 
 namespace mds {
 
-template <typename T, size_t Alignment> class vector {
-private:
+template <typename T, size_t Alignment>
+class vector {
+public:
   std::vector<std::byte> storage;
 
   struct sov_metadata {
@@ -56,13 +28,17 @@ private:
   // SoV
   std::span<double> _x;
   std::span<int> _v;
+  std::span<float> _m;
 
   std::vector<size_t> byte_sizes; // Size of each SoV including alignment padding
   std::vector<sov_metadata> _v_md;
 
   struct aos_view {
+    using m_extents = extents<size_t, mDim, mDim>;
+
     const double &x;
     const std::span<int> v;
+    const mdspan<float, m_extents, layout_stride> m;
   };
 
   // Helper function to compute aligned size
@@ -83,6 +59,7 @@ public:
     size_t m_idx = 0;
     byte_sizes[m_idx] = align_size(sizeof(double[_size]), Alignment); // _x
     sizes[m_idx] = _size;
+    std::cout << "_x = " << sizes[m_idx] << " elements in " << byte_sizes[m_idx] << " bytes\n";
     total_byte_size += byte_sizes[m_idx++];
 
     for (auto &elem : data) { // _v
@@ -91,6 +68,12 @@ public:
       byte_sizes[m_idx] += align_size(sizeof(int[n_elements]), Alignment);
       sizes[m_idx] += n_elements;
     }
+    std::cout << "_v = " << sizes[m_idx] << " elements in " << byte_sizes[m_idx] << " bytes\n";
+    total_byte_size += byte_sizes[m_idx++];
+
+    byte_sizes[m_idx] = align_size(sizeof(float[_size * mDim * mDim]), Alignment); // _x
+    sizes[m_idx] = _size * mDim * mDim;
+    std::cout << "_m = " << sizes[m_idx] << " elements in " << byte_sizes[m_idx] << " bytes\n";
     total_byte_size += byte_sizes[m_idx++];
 
     storage.resize(total_byte_size);
@@ -117,12 +100,28 @@ public:
         e_idx++;
       }
     }
+
+    _m = std::span(reinterpret_cast<float *>(storage.data() + offset), sizes[m_idx]);
+    offset += byte_sizes[m_idx++];
+    e_idx = 0;
+    for (size_t i = 0; i < mDim; i++) {
+      for (size_t j = 0; j < mDim; j++) {
+        for (auto &elem : data) {
+          new (&_m[e_idx]) float(elem.m[i][j]);
+          e_idx++;
+        }
+      }
+    }
   }
 
   auto size() const -> std::size_t { return _size; }
 
   auto operator[](std::size_t idx) const -> aos_view {
-    return aos_view(_x[idx], _v.subspan(_v_md[idx].offset, _v_md[idx].size));
+    auto m_stride = std::array<size_t, 2>{_size * mDim, _size};
+
+    return aos_view{.x = _x[idx],
+                    .v = _v.subspan(_v_md[idx].offset, _v_md[idx].size),
+                    .m = {_m.data() + idx, {typename aos_view::m_extents{}, m_stride}}};
   }
 };
 } // namespace mds
@@ -130,26 +129,56 @@ public:
 struct data {
   double x;
   std::vector<int> v;
-  // std::vector<std::vector<float>> m; // TODO
+  EigenMatrix<float, mDim> m;
 };
 
 int main() {
-  data e1 = {0, {100, 101, 102, 103}};
-  data e2 = {4, {200}};
-  data e3 = {8, {300, 301}};
+  data e1 = {0, {10, 11, 12, 13}, {{{100, 101}, {102, 103}}}};
+  data e2 = {4, {20}, {{{200, 201}, {202, 203}}}};
+  data e3 = {8, {30, 31}, {{{300, 301}, {302, 303}}}};
 
   mds::vector<data, 64> maos = {e1, e2, e3};
 
   std::cout << "maos.size = " << maos.size() << "\n";
   for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", a: {";
-    print_vector(maos[i].v);
-    std::cout << " )\n";
+    std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", v: {";
+    print_member(maos[i].v);
+    std::cout << "}, m: {";
+    auto md = maos[i].m;
+    for (size_t j = 0; j < md.extent(0); j++) {
+      if (j != 0) std::cout << ", ";
+      std::cout << "{";
+      for (size_t k = 0; k < md.extent(1); k++) {
+        if (k != 0) std::cout << ", ";
+        std::cout << md[j, k];
+      }
+      std::cout << "}";
+    }
+    std::cout << "} )\n";
   }
 
   for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "maos[" << i << "] = ( x:" << (long long)&maos[i].x << ", a: {";
-    print_vector_addr(maos[i].v);
-    std::cout << " )\n";
+    std::cout << "maos[" << i << "] = ( x:" << (long long)&maos[i].x << ", v: {";
+    print_member_addr(maos[i].v);
+    std::cout << "}, m: {";
+    auto md = maos[i].m;
+    for (size_t j = 0; j < md.extent(0); j++) {
+      if (j != 0) std::cout << ", ";
+      std::cout << "{";
+      for (size_t k = 0; k < md.extent(1); k++) {
+        if (k != 0) std::cout << ", ";
+        std::cout <<  (long long) &md[j, k];
+      }
+      std::cout << "}";
+    }
+    std::cout << "} )\n";
   }
+
+  print_member(maos._x);
+  std::cout << "\n";
+  print_member(maos._v);
+  std::cout << "\n";
+  print_member(maos._m);
+
+  std::cout << "\n";
 }

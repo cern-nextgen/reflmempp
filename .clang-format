@@ -1,3 +1,7 @@
 ReflowComments: false
 MaxEmptyLinesToKeep: 1
 ColumnLimit:     120
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortBlocksOnASingleLine: Always
+AlwaysBreakTemplateDeclarations: Yes
