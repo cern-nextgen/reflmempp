@@ -150,7 +150,7 @@ int main() {
       std::cout << "{";
       for (size_t k = 0; k < md.extent(1); k++) {
         if (k != 0) std::cout << ", ";
-        std::cout << md(j, k); // operator[] doesn't seem to work with kokkos?
+        std::cout << md[j, k];
       }
       std::cout << "}";
     }
@@ -167,7 +167,7 @@ int main() {
       std::cout << "{";
       for (size_t k = 0; k < md.extent(1); k++) {
         if (k != 0) std::cout << ", ";
-        std::cout <<  (long long) &md(j, k);
+        std::cout <<  (long long) &md[j, k];
       }
       std::cout << "}";
     }
