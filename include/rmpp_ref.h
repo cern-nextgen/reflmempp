@@ -1,63 +1,66 @@
-// SoA structure with an AoS interface using P2996 reflection and P3294 token
-// injection. Each array in the SoA is allocated in a contiguous storage
-// container.
+#ifndef REFL_MEM_PP_H
+#define REFL_MEM_PP_H
 
-#define __cpp_lib_reflection 20240815
-
-#include "mdspan.h"
 #include "utils.h"
-
-#include <array>
-#include <concepts>
 #include <experimental/meta>
 #include <iostream>
+#include <memory>
 #include <span>
 #include <type_traits>
 
+namespace rmpp_ref {
 using namespace std::literals::string_view_literals;
 
-///
-// Magic Data Structure
-///
-namespace mds {
+constexpr auto member_prefix = "m_"sv;
+constexpr auto metadata_suffix = "_md"sv;
+constexpr auto extents_suffix = "_extents"sv;
 
-consteval auto gen_sov_members(std::meta::info t) -> void {
+namespace detail {
+consteval void gen_sov_members(std::meta::info t) {
   for (auto member : nonstatic_data_members_of(t)) {
-    auto vec_member = ^{ \id("_"sv, name_of(member)) };
+    auto vec_member = ^{ \id(member_prefix, name_of(member)) };
 
     auto type = type_of(member);
     if (type_is_container(type) && !type_is_eigen(type)) {
-      queue_injection(^{ std::vector<sov_metadata> \id("_"sv, name_of(member), "_md"sv); });
+      queue_injection(^{ std::vector<sov_metadata> \id(member_prefix, name_of(member), metadata_suffix); });
     }
 
     queue_injection(^{ std::span<typename[:\(get_scalar_type(type)):]> \tokens(vec_member); });
   }
 }
 
-consteval auto gen_sor_members(std::meta::info t) -> void {
+consteval void gen_aos_view(std::meta::info t) {
   for (auto member : nonstatic_data_members_of(t)) {
     auto type = type_of(member);
     auto scalar_type = get_scalar_type(type);
     if (type_is_eigen(type)) {
       auto dim = extract<size_t>(template_arguments_of(type)[1]);
-      queue_injection(^{ using \id(name_of(member), "_extents"sv) = extents<size_t, \(dim), \(dim)>; });
+      queue_injection(^{ using \id(name_of(member), extents_suffix) = extents<size_t, \(dim), \(dim)>; });
       queue_injection(^{
-        const mdspan<typename[:\(scalar_type):], \id(name_of(member), "_extents"sv), layout_stride> \id(
-            name_of(member));
+        mdspan<typename[:\(scalar_type):], \id(name_of(member), extents_suffix), layout_stride> \id(name_of(member));
       });
     } else if (type_is_container(type)) {
-      queue_injection(^{ const std::span<typename[:\(scalar_type):]>  \id(name_of(member)); });
+      queue_injection(^{ std::span<typename[:\(scalar_type):]>  \id(name_of(member)); });
     } else { // scalar
-      queue_injection(^{ const typename[:\(type):] & \id(name_of(member)); });
+      queue_injection(^{ typename[:\(type):] & \id(name_of(member)); });
     }
   }
 }
+
+consteval void gen_soa_view(std::meta::info t) {
+  for (auto member : nonstatic_data_members_of(t)) {
+    auto type = type_of(member);
+    queue_injection(^{ typename[:\(type):] & \id(name_of(member)); });
+  }
+}
+
+} // namespace detail
 
 template <typename T, size_t Alignment>
 class vector {
 private:
   std::vector<std::byte> storage;
-  size_t _size; // Number of elements
+  size_t m_size; // Number of elements
 
 public: // internal stuff public for debugging
   struct sov_metadata {
@@ -66,22 +69,26 @@ public: // internal stuff public for debugging
       return os << "{" << obj.offset << ", " << obj.size << "}";
     }
   };
-  consteval { gen_sov_members(^T); }
+  consteval { detail::gen_sov_members(^T); }
 
   std::vector<size_t> byte_sizes; // Size of each SoV including alignment padding
 
   struct aos_view {
-    consteval { gen_sor_members(^T); }
+    consteval { detail::gen_aos_view(^T); }
+  };
+
+  struct soa_view {
+    consteval { detail::gen_soa_view(^T); }
   };
 
   // Helper function to compute aligned size
-  constexpr inline size_t align_size(size_t size, size_t alignment) {
+  constexpr inline size_t align_size(size_t size, size_t alignment) const {
     return ((size + alignment - 1) / alignment) * alignment;
   }
 
   // Compute the number of bytes needed for each storage vector and the total number of storage bytes.
   template <std::meta::info Member>
-  auto compute_sizes(const std::initializer_list<T> data, size_t &size, size_t &byte_size) -> void {
+  void compute_sizes(const std::initializer_list<T> data, size_t &size, size_t &byte_size) & {
     constexpr auto type = type_of(Member);
     if constexpr (type_is_eigen(type)) {
       constexpr auto dim = extract<size_t>(template_arguments_of(type)[1]);
@@ -92,7 +99,9 @@ public: // internal stuff public for debugging
       for (auto &elem : data) {
         auto n_elements = elem.[:Member:].size();
         consteval {
-          queue_injection(^{ \id("_"sv, name_of(Member), "_md"sv).push_back({.offset = size, .size = n_elements}); });
+          queue_injection(^{
+            \id(member_prefix, name_of(Member), metadata_suffix).push_back({.offset = size, .size = n_elements});
+          });
         }
         byte_size += align_size(sizeof(vec_type[n_elements]), Alignment);
         size += n_elements;
@@ -106,7 +115,7 @@ public: // internal stuff public for debugging
   }
 
   template <std::meta::info Member>
-  auto fill_sov_matrix(const std::initializer_list<T> data) -> void {
+  void fill_sov_matrix(const std::initializer_list<T> data) & {
     using scalar_type = inner_type<typename[:type_of(Member):]>;
     constexpr auto dim = extract<size_t>(template_arguments_of(type_of(Member))[1]);
 
@@ -118,7 +127,8 @@ public: // internal stuff public for debugging
           consteval {
             // Element-wise contiguous
             // e.g, new (&_m[e_idx]) float(elem.m[i,j]);
-            queue_injection(^{ new (&\id("_"sv, name_of(Member))[e_idx]) scalar_type(elem.[:Member:][i][j]); });
+            queue_injection(
+                ^{ std::construct_at(&\id(member_prefix, name_of(Member))[e_idx], elem.[:Member:][i][j]); });
           }
           e_idx++;
         }
@@ -127,7 +137,7 @@ public: // internal stuff public for debugging
   }
 
   template <std::meta::info Member>
-  auto fill_sov_container(const std::initializer_list<T> data) -> void {
+  void fill_sov_container(const std::initializer_list<T> data) & {
     using vec_type = inner_type<typename[:type_of(Member):]>;
 
     size_t e_idx = 0;
@@ -135,7 +145,7 @@ public: // internal stuff public for debugging
       for (size_t i = 0; i < elem.[:Member:].size(); i++) {
         consteval {
           // e.g, new (&_a[e_idx]) int(elem.a[i]);
-          queue_injection(^{ new (&\id("_"sv, name_of(Member))[e_idx]) vec_type(elem.[:Member:][i]); });
+          queue_injection(^{ std::construct_at(&\id(member_prefix, name_of(Member))[e_idx], elem.[:Member:][i]); });
         }
         e_idx++;
       }
@@ -143,12 +153,12 @@ public: // internal stuff public for debugging
   }
 
   template <std::meta::info Member>
-  auto fill_sov_scalar(const std::initializer_list<T> data) -> void {
+  void fill_sov_scalar(const std::initializer_list<T> data) & {
     size_t e_idx = 0;
     for (auto &elem : data) {
       consteval {
-        // e.g, new (&_x[e_idx]) double(elem.x);
-        queue_injection(^{ new (&\id("_"sv, name_of(Member))[e_idx]) decltype(elem.[:Member:])(elem.[:Member:]); });
+        // e.g, std::construct_at(&_x[e_idx], elem.x);
+        queue_injection(^{ std::construct_at(&\id(member_prefix, name_of(Member))[e_idx], elem.[:Member:]); });
       }
       e_idx++;
     }
@@ -157,7 +167,7 @@ public: // internal stuff public for debugging
 public:
   vector(std::initializer_list<T> data) {
     auto n_members = [:std::meta::reflect_value(nonstatic_data_members_of(^T).size()):];
-    _size = data.size();
+    m_size = data.size();
 
     std::vector<size_t> sizes(n_members);
     byte_sizes.resize(n_members);
@@ -186,8 +196,9 @@ public:
         // Assign required bytes to storage vector e.g.,
         //    _x = std::span(reinterpret_cast<double*>(storage.data()) + offset,
         //                   sizes[m_idx]);
-        queue_injection(
-            ^{ \id("_"sv, name) = std::span(reinterpret_cast<[: \(type):] *>(storage.data() + offset), sov_size); });
+        queue_injection(^{
+          \id(member_prefix, name) = std::span(reinterpret_cast<[: \(type):] *>(storage.data() + offset), sov_size);
+        });
       }
       offset += byte_sizes[m_idx++];
 
@@ -202,29 +213,29 @@ public:
     };
   }
 
-  auto size() const -> std::size_t { return _size; }
+  size_t size() const { return m_size; }
 
-  auto operator[](std::size_t idx) const -> aos_view {
+  aos_view operator[](const size_t idx) const {
     consteval { // gather references to sov elements
       std::meta::list_builder member_data_tokens{};
       for (auto member : nonstatic_data_members_of(^T)) {
         auto name = name_of(member);
         auto type = type_of(member);
-        auto sov_name = ^{ \id("_"sv, name) };
+        auto sov_name = ^{ \id(member_prefix, name) };
 
         if (type_is_eigen(type)) {
           auto dim = extract<size_t>(template_arguments_of(type)[1]);
-          auto extents = ^{ typename aos_view::\id(name, "_extents"sv) };
+          auto extents = ^{ typename aos_view::\id(name, extents_suffix) };
           auto stride = ^{
             std::array<size_t, 2> {
-              _size * \(dim), _size
+              m_size * \(dim), m_size
             }
           };
           member_data_tokens += ^{
             .\id(name) = { \tokens(sov_name).data() + idx, {\tokens(extents){}, \tokens(stride)} }
           };
         } else if (type_is_container(type)) {
-          auto md_name = ^{ \id("_"sv, name, "_md"sv) };
+          auto md_name = ^{ \id(member_prefix, name, metadata_suffix) };
           member_data_tokens +=
               ^{ .\id(name) = \tokens(sov_name).subspan(\tokens(md_name)[idx].offset, \tokens(md_name)[idx].size) };
         } else {
@@ -239,70 +250,34 @@ public:
       queue_injection(^{ return aos_view{\tokens(member_data_tokens)}; });
     }
   }
-};
-} // namespace mds
 
-// dummy
-struct data {
-  double x;
-  std::vector<int> v;
-  EigenMatrix<float, 2> m;
-};
-
-int main() {
-  data e1 = {0, {10, 11, 12, 13}, {{{100, 101}, {102, 103}}}};
-  data e2 = {4, {20}, {{{200, 201}, {202, 203}}}};
-  data e3 = {8, {30, 31}, {{{300, 301}, {302, 303}}}};
-
-  mds::vector<data, 64> maos = {e1, e2, e3};
-
-  std::cout << "maos.size = " << maos.size();
-  for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "\nmaos[" << i << "] = (\n";
-
-    [:expand(nonstatic_data_members_of(^decltype(maos[i]))):] >> [&]<auto e> {
-      std::cout << "\t" << name_of(e) << ": ";
-      print_member(maos[i].[:e:]);
-      std::cout << "\n";
-    };
-
-    auto md = maos[i].m;
-    for (size_t j = 0; j < md.extent(0); j++) {
-      if (j != 0) std::cout << ", ";
-      std::cout << "{";
-      for (size_t k = 0; k < md.extent(1); k++) {
-        if (k != 0) std::cout << ", ";
-        std::cout << md(j, k);
-      }
-      std::cout << "}";
-    }
-    std::cout << "} )\n";
-
-    std::cout << ")\naddr:\n";
-
-    [:expand(nonstatic_data_members_of(^decltype(maos[i]))):] >> [&]<auto e> {
-      std::cout << "\t" << name_of(e) << ": ";
-      print_member_addr(maos[i].[:e:]);
-      std::cout << "\n";
-    };
+  template <typename View>
+  View get_view() const {
+    throw std::invalid_argument{"Unsupported view"};
   }
 
-  std::cout << "\n";
+  template <typename View>
+  View get_view(const size_t idx) const
+    requires std::is_same_v<View, aos_view>
+  {
+    return operator[](idx);
+  }
 
-  //// print underlying data ////
+  template <typename View>
+  View get_view() const
+    requires std::is_same_v<View, soa_view>
+  {
+    // consteval {
+    //   std::meta::list_builder member_data_tokens{};
+    //   for (auto member : nonstatic_data_members_of(^T)) {
+    //     auto name = name_of(member);
+    //     auto sov_name = ^{ \id(member_prefix, name) };
+    //     member_data_tokens += ^{ .\id(name) = \tokens(sov_name) };
+    //   }
 
-  // Edison Design Group C/C++ Front End, version 6.6 (Jul 29 2024 17:25:25)
-  // - accessible_members_of is undefined
-  // - nonstatic_data_members_of doesn't accept filters
-  [:expand(members_of(^mds::vector<data, 64>, std::meta::is_nonstatic_data_member, std::meta::is_accessible)
-           ):] >> [&]<auto e> {
-    std::cout << "\n" << name_of(e) << " = ";
-    print_member(maos.[:e:]);
-    std::cout << "\n\taddr = ";
-    print_member_addr(maos.[:e:]);
-  };
-
-  std::cout << "\n";
-
-  return 0;
-}
+    //   queue_injection(^{ return soa_view{\tokens(member_data_tokens)}; });
+    // }
+  }
+};
+} // namespace rmpp
+#endif

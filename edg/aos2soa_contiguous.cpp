@@ -1,12 +1,11 @@
 // SoA structure with an AoS interface using P2996 reflection and P3294 token injection.
 // Each array in the SoA is allocated in a contiguous storage container.
-// Run via https://godbolt.org/z/r57Phe8do
 
 #include <experimental/meta>
 #include <iostream>
 #include <span>
 
-namespace mds {
+namespace rmpp {
 
 using namespace std::literals;
 
@@ -50,7 +49,7 @@ class vector {
     };
 
     // Helper function to compute aligned size
-    constexpr inline size_t align_size(size_t size, size_t alignment) {
+    constexpr inline size_t align_size(size_t size, size_t alignment) const {
         return ((size + alignment - 1) / alignment) * alignment;
     }
 
@@ -102,10 +101,9 @@ class vector {
             size_t e_idx = 0;
             for (auto elem : data) {
                 consteval {
-                    // e.g, new (&_x[e_idx]) double(elem.x);
+                    // e.g, std::construct_at(&_x[e_idx], elem.x);
                     queue_injection(^{
-                      new (&\id("_"sv, name_of(e))[e_idx]) decltype(elem.\id(name_of(e)))(
-                          elem.\id(name_of(e)));
+                      std::construct_at(&\id("_"sv, name_of(e))[e_idx], elem.\id(name_of(e)));
                     });
                 }
                 e_idx++;
@@ -113,9 +111,9 @@ class vector {
         };
     }
 
-    auto size() const -> std::size_t { return sizes[0]; }
+    size_t size() const { return sizes[0]; }
 
-    auto operator[](std::size_t m_idx) const -> aos_view {
+    aos_view operator[](std::size_t m_idx) const {
         consteval {
             // gather references to sov elements
             std::meta::list_builder member_data_tokens{};
@@ -134,7 +132,7 @@ class vector {
         }
     }
 };
-}  // namespace mds
+}  // namespace rmpp
 
 // dummy
 struct data {
@@ -146,7 +144,7 @@ int main() {
     data e2 = {4, 5, 6, 7};
     data e3 = {8, 9, 10, 11};
 
-    mds::vector<data, 64> maos = {e1, e2, e3};
+    rmpp::vector<data, 64> maos = {e1, e2, e3};
 
     std::cout << "maos.size = " << maos.size() << "\n";
     for (size_t i = 0; i != maos.size(); ++i) {
@@ -177,6 +175,7 @@ int main() {
 
         std::cout << "})\n";
     }
+
 
     return 0;
 }

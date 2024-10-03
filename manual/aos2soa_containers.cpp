@@ -42,7 +42,7 @@ public:
   };
 
   // Helper function to compute aligned size
-  constexpr inline size_t align_size(size_t size, size_t alignment) {
+  constexpr inline size_t align_size(size_t size, size_t alignment) const {
     return ((size + alignment - 1) / alignment) * alignment;
   }
 
@@ -87,7 +87,7 @@ public:
     offset += byte_sizes[m_idx++];
     size_t e_idx = 0;
     for (auto &elem : data) {
-      new (&_x[e_idx]) double(elem.x);
+      std::construct_at(&_x[e_idx], elem.x);
       e_idx++;
     }
 
@@ -96,7 +96,7 @@ public:
     e_idx = 0;
     for (auto &elem : data) {
       for (size_t i = 0; i < elem.v.size(); i++) {
-        new (&_v[e_idx]) int(elem.v[i]);
+        std::construct_at(&_v[e_idx], elem.v[i]);
         e_idx++;
       }
     }
@@ -107,16 +107,16 @@ public:
     for (size_t i = 0; i < mDim; i++) {
       for (size_t j = 0; j < mDim; j++) {
         for (auto &elem : data) {
-          new (&_m[e_idx]) float(elem.m[i][j]);
+          std::construct_at(&_m[e_idx], elem.m[i][j]);
           e_idx++;
         }
       }
     }
   }
 
-  auto size() const -> std::size_t { return _size; }
+  size_t size() const { return _size; }
 
-  auto operator[](std::size_t idx) const -> aos_view {
+  aos_view operator[](std::size_t idx) const  {
     auto m_stride = std::array<size_t, 2>{_size * mDim, _size};
 
     return aos_view{.x = _x[idx],

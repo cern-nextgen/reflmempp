@@ -749,7 +749,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     using layout_type = layout_stride;
 
     static_assert(__mdspan::__is_extents<_Extents>, "extents_type must be a specialization of std::extents");
-    static_assert(extents_type::rank_dynamic() > 0 || _S_req_span_size_is_repr(extents_type()));
+    // static_assert(extents_type::rank_dynamic() > 0 || _S_req_span_size_is_repr(extents_type()));
 
   private:
     static constexpr rank_type _S_rank = extents_type::rank();

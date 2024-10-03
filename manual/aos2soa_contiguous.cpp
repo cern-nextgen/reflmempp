@@ -20,7 +20,7 @@ private:
   };
 
   // Helper function to compute aligned size
-  constexpr inline size_t align_size(size_t size, size_t alignment) {
+  constexpr inline size_t align_size(size_t size, size_t alignment) const {
     return ((size + alignment - 1) / alignment) * alignment;
   }
 
@@ -83,9 +83,9 @@ public:
     }
   }
 
-  auto size() const -> std::size_t { return sizes[0]; }
+  size_t size() const { return sizes[0]; }
 
-  auto operator[](std::size_t idx) const -> aos_view {
+  aos_view operator[](std::size_t idx) const  {
     return aos_view{_x[idx], _y[idx], _z[idx], _value[idx]};
   }
 };

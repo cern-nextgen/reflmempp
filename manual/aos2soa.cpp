@@ -2,7 +2,8 @@
 #include <vector>
 
 namespace mds {
-template <typename T> class vector {
+template <typename T>
+class vector {
 private: //
   std::vector<double> _x, _y, _z, _value;
   struct aos_view {
@@ -10,18 +11,16 @@ private: //
   };
 
 public:
-  auto size() -> std::size_t { return _x.size(); }
+  size_t size() const { return _x.size(); }
 
-  void push_back(T elem) {
+  void push_back(T elem) & {
     _x.push_back(elem.x);
     _y.push_back(elem.y);
     _z.push_back(elem.z);
     _value.push_back(elem.value);
   }
 
-  auto operator[](std::size_t idx) -> aos_view {
-    return aos_view(_x[idx], _y[idx], _z[idx], _value[idx]);
-  }
+  aos_view operator[](std::size_t idx) const { return aos_view(_x[idx], _y[idx], _z[idx], _value[idx]); }
 };
 } // namespace mds
 
@@ -43,7 +42,7 @@ int main() {
 
   std::cout << "maos.size = " << maos.size() << "\n";
   for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", y:" << maos[i].y
-              << ", z:" << maos[i].z << ", value:" << maos[i].value << ")\n";
+    std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", y:" << maos[i].y << ", z:" << maos[i].z
+              << ", value:" << maos[i].value << ")\n";
   }
 }

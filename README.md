@@ -10,7 +10,7 @@ So far, we implemented several examples of converting an Array-of-Structures (Ao
 Struct contains for `double` data members. The converted SoA stores the values for each member in a separate `std::vector`.
 ### aos2soa_contiguous
 Struct contains for `double` data members. The SoA storage is allocated in a single contiguous chunk, and the data vectors for the members are contiguously mapped to this storage buffer using `std::span`.
-### aosoa2soaos_contiguous
+### aos2soa_containers
 Struct contains `double`, `std::vector`, and `std::array<std::array>` (matrix) data members.
 The SoA storage is again allocated in a single contiguous chunk with member spans mapped to it.
 
@@ -23,9 +23,9 @@ The data for the matrix member is assigned contiguously element-wise like `aos[0
 
 | **Example**            | **GodBolt**                     |
 |------------------------|---------------------------------|
-| aos2soa                | https://godbolt.org/z/vrKdMreEG |
-| aos2soa_contiguous     | https://godbolt.org/z/r57Phe8do |
-| aosoa2soaos_contiguous | https://godbolt.org/z/Pbx949d8b |
+| aos2soa                | https://godbolt.org/z/7fWcoazTs |
+| aos2soa_contiguous     | https://godbolt.org/z/6xb3PE4e5 |
+| aos2soa_containers     | https://godbolt.org/z/9s18G6WP1 |
 
 - `manual`: contains the manually unrolled versions of each example. These can be compiled with a standard C++ compiler using CMake:
 ```

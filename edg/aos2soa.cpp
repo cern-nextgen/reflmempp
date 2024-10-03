@@ -1,13 +1,12 @@
 // Simple SoA structure with an AoS interface using P2996 reflection and P3294 token injection
-// Run via https://godbolt.org/z/vrKdMreEG
 
 #include <experimental/meta>
 #include <iostream>
 
-namespace mds {
+namespace rmpp {
 using namespace std::literals;
 
-consteval auto gen_sov_members(auto t) -> void {
+consteval void gen_sov_members(auto t) {
     for (auto member : nonstatic_data_members_of(t)) {
         auto vec_member = ^{
           \id("_"sv, name_of(member))
@@ -19,7 +18,7 @@ consteval auto gen_sov_members(auto t) -> void {
     }
 }
 
-consteval auto gen_sor_members(auto t) -> void {
+consteval void gen_sor_members(auto t) {
     for (auto member : nonstatic_data_members_of(t)) {
         queue_injection(^{
           const typename[:\(type_of(member)):] & \id(name_of(member));
@@ -59,7 +58,7 @@ class vector {
     };
 
    public:
-    auto size() const -> std::size_t {
+    size_t size() const {
         consteval {
             auto first = nonstatic_data_members_of(^T)[0];
             queue_injection(^{
@@ -68,7 +67,7 @@ class vector {
         }
     }
 
-    auto push_back(T const& elem) -> void {
+    void push_back(T const& elem) & {
         consteval {
             // push back the data into sov
             for (auto member : nonstatic_data_members_of(^T)) {
@@ -81,7 +80,7 @@ class vector {
         }
     }
 
-    auto operator[](std::size_t idx) const -> aos_view {
+    aos_view operator[](std::size_t idx) const {
         consteval {
             // gather references to sov elements
             std::meta::list_builder member_data_tokens{};
@@ -100,7 +99,7 @@ class vector {
         }
     }
 };
-}  // namespace mds
+}  // namespace rmpp
 
 // dummy
 struct data {
@@ -108,7 +107,7 @@ struct data {
 };
 
 int main() {
-    mds::vector<data> maos;
+    rmpp::vector<data> maos;
 
     data e1 = {0, 1, 2, 3};
     data e2 = {4, 5, 6, 7};
