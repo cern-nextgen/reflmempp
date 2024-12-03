@@ -16,44 +16,80 @@ constexpr auto metadata_suffix = "_md"sv;
 constexpr auto extents_suffix = "_extents"sv;
 
 namespace detail {
-consteval void gen_sov_members(std::meta::info t) {
-  for (auto member : nonstatic_data_members_of(t)) {
+
+struct no_methods;
+
+/**no_methods
+ * @brief Generates array members for each non-static data member in a 
+ * given array-of-structures (AoS) type. 
+ * 
+ * If the member type is a (jagged) vector, it also generates a vector of metadata to 
+ * keep track of the length of the vector for each data element. The array members in the 
+ * SoA are declared as `std::span` with the scalar type.
+ *
+ * @param aos_type The reflection of the array-of-structures (AOS) type.
+ */
+consteval void gen_soa_members(std::meta::info aos_type) {
+  for (auto member : nonstatic_data_members_of(aos_type)) {
     auto vec_member = ^{ \id(member_prefix, name_of(member)) };
 
     auto type = type_of(member);
     if (type_is_container(type) && !type_is_eigen(type)) {
+      // e.g., std::vector<sov_metadata> m_v_md;
       queue_injection(^{ std::vector<sov_metadata> \id(member_prefix, name_of(member), metadata_suffix); });
     }
 
+    // e.g., std::span<double> m_x;
     queue_injection(^{ std::span<typename[:\(get_scalar_type(type)):]> \tokens(vec_member); });
   }
 }
 
-consteval void gen_aos_view(std::meta::info t) {
-  for (auto member : nonstatic_data_members_of(t)) {
+/**
+ * @brief Generates an Array of Structures (AoS) view for a given type.
+ *
+ * @param aos_type The meta-information of the type for which the AoS view is to be generated.
+ *
+ * The function handles three types of members:
+ * 1. Eigen types: For Eigen types, it extracts the scalar type and dimension, and generates an `mdspan` with `layout_stride`.
+ * 2. Container types: For container types, it generates a `std::span` with the scalar type.
+ * 3. Scalar types: For scalar types, it generates a reference to the member.
+ */
+consteval void gen_aos_view(std::meta::info aos_type) {
+  for (auto member : nonstatic_data_members_of(aos_type)) {
     auto type = type_of(member);
     auto scalar_type = get_scalar_type(type);
     if (type_is_eigen(type)) {
       auto dim = extract<size_t>(template_arguments_of(type)[1]);
+      // e.g., using x_extents = extents<size_t, 2, 2>;
       queue_injection(^{ using \id(name_of(member), extents_suffix) = extents<size_t, \(dim), \(dim)>; });
+
+      // e.g., mdspan<double, x_extents, layout_stride> m_x;
       queue_injection(^{
         mdspan<typename[:\(scalar_type):], \id(name_of(member), extents_suffix), layout_stride> \id(name_of(member));
       });
     } else if (type_is_container(type)) {
+      // e.g., std::span<double> m_v;
       queue_injection(^{ std::span<typename[:\(scalar_type):]>  \id(name_of(member)); });
     } else { // scalar
+      // e.g., double &m_x;
       queue_injection(^{ typename[:\(type):] & \id(name_of(member)); });
     }
   }
 }
 
-consteval void gen_soa_view(std::meta::info t) {
-  for (auto member : nonstatic_data_members_of(t)) {
+/**
+ * @brief Generates a Structure of Arrays (SoA) view from an Array of Structures (AoS) type 
+ * converted to a Struct of Arrays (SoA) type.
+ * 
+ * @param aos_type A meta-information object representing the AoS type.
+ */
+consteval void gen_soa_view(std::meta::info aos_type) {
+  for (auto member : nonstatic_data_members_of(aos_type)) {
     auto type = type_of(member);
+    // e.g., std::span<double> m_x;
     queue_injection(^{ typename[:\(type):] & \id(name_of(member)); });
   }
 }
-
 } // namespace detail
 
 template <typename T, size_t Alignment>
@@ -69,7 +105,7 @@ public: // internal stuff public for debugging
       return os << "{" << obj.offset << ", " << obj.size << "}";
     }
   };
-  consteval { detail::gen_sov_members(^T); }
+  consteval { detail::gen_soa_members(^T); }
 
   std::vector<size_t> byte_sizes; // Size of each SoV including alignment padding
 
@@ -86,7 +122,17 @@ public: // internal stuff public for debugging
     return ((size + alignment - 1) / alignment) * alignment;
   }
 
-  // Compute the number of bytes needed for each storage vector and the total number of storage bytes.
+  /**
+   * @brief Computes the sizes and byte sizes of the given data based on the type of the specified member.
+   * 
+   * This function calculates the total size and byte size of the elements in the provided initializer list `data`.
+   * The computation is based on the type of the member specified by the template parameter `Member`.
+   * 
+   * @tparam Member The member whose type information is used for size computation.
+   * @param data An initializer list of elements of type `T`.
+   * @param size A reference to a size_t variable where the total size will be stored.
+   * @param byte_size A reference to a size_t variable where the total byte size will be stored.
+   */
   template <std::meta::info Member>
   void compute_sizes(const std::initializer_list<T> data, size_t &size, size_t &byte_size) & {
     constexpr auto type = type_of(Member);
@@ -120,7 +166,6 @@ public: // internal stuff public for debugging
     constexpr auto dim = extract<size_t>(template_arguments_of(type_of(Member))[1]);
 
     size_t e_idx = 0;
-    // TODO: arbitrary dimensions?
     for (size_t i = 0; i < dim; i++) {
       for (size_t j = 0; j < dim; j++) {
         for (auto &elem : data) {
