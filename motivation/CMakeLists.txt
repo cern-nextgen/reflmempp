@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.30)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_PREFIX_PATH "~/apps/benchmark/")
-list(APPEND CMAKE_MODULE_PATH "~/apps/benchmark/cmake/Modules")
+list(APPEND CMAKE_PREFIX_PATH "/data/apps/benchmark/")
+list(APPEND CMAKE_MODULE_PATH "/data/apps/benchmark/cmake/Modules")
 
-set(INTEL_FOLDER /home/jollychen/apps/intel/oneapi/compiler/2025.0)
+set(INTEL_FOLDER /data/apps/intel/oneapi/compiler/latest)
 set(GCC_FOLDER /usr/bin)
 set(CLANG_FOLDER /usr/bin)
 
@@ -25,7 +25,7 @@ elseif(clang)
 endif()
 
 add_compile_options(-O3 -Wall -Wextra -Wpedantic)
-if (novec) 
+if (novec)
     message(STATUS "Disabling vectorization")
     if(intel)
         add_compile_options(-no-vec)
@@ -55,4 +55,14 @@ elseif(clang)
     target_compile_options(aos2soa PRIVATE -fexperimental-library)
 endif()
 
+find_package(OpenMP REQUIRED)
+find_package(likwid REQUIRED)
+
+add_executable(false_sharing false_sharing.cpp)
+target_link_libraries(false_sharing PRIVATE benchmark::benchmark benchmark::benchmark_main OpenMP::OpenMP_CXX likwid::likwid)
+if(intel)
+    target_compile_options(false_sharing PRIVATE -qopt-report-file=opt-false-sharing.txt)
+elseif(clang)
+    # target_compile_options(false_sharing PRIVATE -stdlib=libc++ )
+endif()
 

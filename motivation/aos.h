@@ -44,36 +44,40 @@ struct S20 {
 
 template <typename T>
 S20<T> GenerateS20(int i) {
-  return S20<T>{(T)i, (T)1 + i, (T)2 + i, (T)3 + i, (T)4 + i, (T)5 + i, (T)6 + i, (T)7 + i, (T)8 + i, (T)9 + i, 
+  return S20<T>{(T)i, (T)1 + i, (T)2 + i, (T)3 + i, (T)4 + i, (T)5 + i, (T)6 + i, (T)7 + i, (T)8 + i, (T)9 + i,
                 (T)10 + i, (T)11 + i, (T)12 + i, (T)13 + i, (T)14 + i, (T)15 + i, (T)16 + i, (T)17 + i, (T)18 + i, (T)19 + i};
 }
 
 template <typename T, size_t N, template<typename> class S, S<T> (*Generate)(int)>
 struct AoSBaseRaw {
 private:
-  alignas(64) S<T> *m_v1, *m_v2;
+  alignas(64) S<T> *m_v1, *m_v2, *m_vout;
   alignas(64) T *m_out;
 
 public:
-  std::span<S<T>> v1, v2;
+  std::span<S<T>> v1, v2, vout;
   std::span<T> out;
 
   AoSBaseRaw() {
     m_v1 = new S<T>[N];
     m_v2 = new S<T>[N];
+    m_vout = new S<T>[N];
     m_out = new T[N];
     v1 = std::span(m_v1, N);
     v2 = std::span(m_v2, N);
+    vout = std::span(m_vout, N);
     out = std::span(m_out, N);
 
     std::generate(v1.begin(), v1.end(), [i = 1]() mutable { return Generate(i++); });
     std::generate(v2.begin(), v2.end(), [i = 1]() mutable { return Generate(i++ + 1); });
+    std::fill(vout.begin(), vout.end(), S<T>{});
     std::fill(out.begin(), out.end(), 0);
   }
 
   ~AoSBaseRaw() {
     delete[] m_v1;
     delete[] m_v2;
+    delete[] m_vout;
     delete[] m_out;
   }
 };
@@ -81,40 +85,45 @@ public:
 template <typename T, size_t N, template<typename> class S, S<T> (*Generate)(int)>
 struct AoSBaseArr {
 private:
-  alignas(64) std::array<S<T>, N> *m_v1, *m_v2;
+  alignas(64) std::array<S<T>, N> *m_v1, *m_v2, *m_vout;
   alignas(64) std::array<T, N> *m_out;
 
 public:
-  std::span<S<T>> v1, v2;
+  std::span<S<T>> v1, v2, vout;
   std::span<T> out;
 
   AoSBaseArr() {
     m_v1 = new std::array<S<T>, N>;
     m_v2 = new std::array<S<T>, N>;
+    m_vout = new std::array<S<T>, N>;
     m_out = new std::array<T, N>;
     v1 = std::span(m_v1->data(), N);
     v2 = std::span(m_v2->data(), N);
+    vout = std::span(m_vout->data(), N);
     out = std::span(m_out->data(), N);
 
     std::generate(v1.begin(), v1.end(), [i = 1]() mutable { return Generate(i++); });
     std::generate(v2.begin(), v2.end(), [i = 1]() mutable { return Generate(i++ + 1); });
+    std::fill(vout.begin(), vout.end(), S<T>{});
     std::fill(out.begin(), out.end(), 0);
   }
 
   ~AoSBaseArr() {
     delete m_v1;
     delete m_v2;
+    delete m_vout;
     delete m_out;
   }
 };
 
 template <typename T, size_t N, template<typename> class S, S<T> (*Generate)(int)>
 struct AoSBaseVec {
-  alignas(64) std::vector<S<T>> v1, v2;
+  alignas(64) std::vector<S<T>> v1, v2, vout;
   alignas(64) std::vector<T> out;
 
   AoSBaseVec() {
     out.resize(N);
+    vout.resize(N);
 
     std::generate_n(std::back_inserter(v1), N, [i = 1]() mutable { return Generate(i++); });
     std::generate_n(std::back_inserter(v2), N, [i = 1]() mutable { return Generate(i++ + 1); });
