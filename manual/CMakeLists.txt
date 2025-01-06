@@ -7,6 +7,7 @@ set(MANUAL_SOURCES
     aos2soa
     aos2soa_contiguous
     aos2soa_containers
+    with_methods    
 )
 
 foreach(src ${MANUAL_SOURCES})

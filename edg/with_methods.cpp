@@ -4,95 +4,99 @@
 
 #define __cpp_lib_reflection 20240815
 
-#include "rmpp_ref.h"
+#include "rmpp.h"
+#include <cassert>
+#include <cmath>
 #include <experimental/meta>
 #include <iostream>
 #include <tuple>
 
 using namespace std::literals::string_view_literals;
 
-// Example from LLAMA thesis Listing A.1
-struct Vec {
-  float x, y, z;
+template <typename T>
+struct Cartesian3D {
+  T &fX, &fY, &fZ;
 
-  void MakePlanar() & { z = 0; }
-
-  friend std::ostream &operator<<(std::ostream &os, const Vec &obj) {
-    return os << "{" << obj.x << ", " << obj.y << ", " << obj.z << "}";
+  friend std::ostream &operator<<(std::ostream &os, const Cartesian3D<T> &obj) {
+    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << "}";
   }
 
-  // Vec() : x(0), y(0), z(0) { std::cout << "Vec default constructor called\n"; }
+  void SetY(T yy) { fY = yy; }
+};
 
-  // Vec(const Vec &other) : x(other.x), y(other.y), z(other.z) { std::cout << "Vec copy constructor called\n"; }
+template <typename T>
+struct PositionVector3D {
+  Cartesian3D<T> fCoordinates;
 
-  // Vec &operator=(const Vec &other) {
-  //   if (this != &other) {
-  //     x = other.x;
-  //     y = other.y;
-  //     z = other.z;
-  //     std::cout << "Vec copy assignment operator called\n";
-  //   }
-  //   return *this;
-  // }
+  friend std::ostream &operator<<(std::ostream &os, const PositionVector3D<T> &obj) {
+    return os << "{" << obj.fCoordinates << "}";
+  }
+
+  void SetY(T yy) { fCoordinates.SetY(yy); }
+};
+
+template <typename T>
+struct LorentzVector {
+  T &fX, &fY, &fZ, &fT;
+
+  friend std::ostream &operator<<(std::ostream &os, const LorentzVector<T> &obj) {
+    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << ", " << obj.fT << "}";
+  }
+
+  // std::sqrt currently doesn't work with the experimental EDG reflection compiler?
+  T Pt2() const { return fX * fX + fY * fY; }
+  void SetPxPyPzE(T px, T py, T pz, T e) {
+    fX = px;
+    fY = py;
+    fZ = pz;
+    fT = e;
+  }
 };
 
 struct Particle {
-  int &id;
-  Vec &pos;
+  int &m_particleID;
+  PositionVector3D<double> m_referencePoint;
+  LorentzVector<double> m_momentum;
 
-  void SetIdMember(int v)  { id = v; }
+  void SetId(int id) { m_particleID = id; }
 
-  // Particle(int &id, Vec &pos) : id(id), pos(pos) { std::cout << "Particle default constructor called\n"; }
-
-  // Particle(const Particle &other) : id(other.id), pos(other.pos) { std::cout << "Particle copy constructor called\n"; }
-
-  // Particle &operator=(const Particle &other) {
-  //   if (this != &other) {
-  //     id = other.id;
-  //     pos = other.pos;
-  //     std::cout << "Particle copy assignment operator called\n";
-  //   }
-  //   return *this;
-  // }
+  double pt2() const { return m_momentum.Pt2(); }
 };
 
-using SoA = rmpp::vector<Particle, 64, rmpp::layout::soa, rmpp::layout::aos>;
-
-void print_maos(auto &maos) {
-  std::cout << "maos.size = " << maos.size();
-  for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "\nmaos[" << i << "] = (\n";
-
-    [:expand(nonstatic_data_members_of(^decltype(maos[i]))):] >> [&]<auto e> {
-      std::cout << "\t" << name_of(e) << ": ";
-      print_member(maos[i].[:e:]);
-      std::cout << "\n";
-    };
-
-    [:expand(nonstatic_data_members_of(^decltype(maos[i]))):] >> [&]<auto e> {
-      std::cout << "\t" << name_of(e) << ": ";
-      print_member_addr(maos[i].[:e:]);
-      std::cout << "\n";
-    };
-  }
-}
+using SoA = rmpp::vector<Particle, 64>;
 
 int main() {
-  // SoA maos{};
-  SoA maos = {{{0, {1., 2., 3.}}, {1, {4., 5., 6.}}, {2, {7., 8., 9.}}}};
+  SoA maos(3);
 
-  std::cout << "-----------------------\n";
-  print_maos(maos);
+  std::array<int, 3> ids = {0, 1, 2};
+  std::array<float, 3> ref_x = {3, 6, 9};
+  std::array<float, 3> ref_y = {4, 7, 10};
+  std::array<float, 3> ref_z = {5, 8, 11};
+  std::array<float, 3> momentum_x = {12, 16, 20};
+  std::array<float, 3> momentum_y = {13, 17, 21};
+  std::array<float, 3> momentum_z = {14, 18, 22};
+  std::array<float, 3> momentum_t = {15, 19, 23};
 
-  assert(maos[0].id == 0);
-  assert(maos[1].id == 1);
-  assert(maos[2].id == 2);
+  std::copy(ids.begin(), ids.end(), maos.m_particleID.begin());
+  std::copy(ref_x.begin(), ref_x.end(), maos.m_referencePoint.fCoordinates.fX.begin());
+  std::copy(ref_y.begin(), ref_y.end(), maos.m_referencePoint.fCoordinates.fY.begin());
+  std::copy(ref_z.begin(), ref_z.end(), maos.m_referencePoint.fCoordinates.fZ.begin());
+  std::copy(momentum_x.begin(), momentum_x.end(), maos.m_momentum.fX.begin());
+  std::copy(momentum_y.begin(), momentum_y.end(), maos.m_momentum.fY.begin());
+  std::copy(momentum_z.begin(), momentum_z.end(), maos.m_momentum.fZ.begin());
+  std::copy(momentum_t.begin(), momentum_t.end(), maos.m_momentum.fT.begin());
 
-  maos[0].SetIdMember(9);
-  maos[0].pos.MakePlanar();
+  std::cout << "----------- Before ------------\n";
+  print_aos(maos);
 
-  std::cout << "-----------------------\n";
-  print_maos(maos);
+  maos[0].SetId(9);
+  maos[1].m_referencePoint.SetY(9999);
+  maos[1].m_referencePoint.fCoordinates.fZ = 8888;
+  maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
+
+  std::cout << "------------ After -----------\n";
+  print_aos(maos);
+  std::cout << "maos[2].pt2() = " << maos[2].pt2();
 
   return 0;
 }
