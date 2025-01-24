@@ -84,7 +84,7 @@ public:
 
 template <typename T, size_t N>
 struct SoA2Vec {
-  alignas(64) std::vector<T> v1_x1, v1_x2, v2_x1, v2_x2, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v2_x1, v2_x2;
   alignas(64) std::vector<T> vout_x1, vout_x2, out;
 
   SoA2Vec() {
