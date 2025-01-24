@@ -1,44 +1,56 @@
 #include "aos.h"
 #include "aosoa.h"
 
-#include <algorithm>
-#include <array>
+#include <barrier>
 #include <benchmark/benchmark.h>
 #include <chrono>
-#include <cmath>
-#include <iostream>
-#include <numeric>
-#include <ranges>
-#include <span>
+#include <latch>
+#include <thread>
 #include <vector>
-
-#include <omp.h>
 // #include <likwid-marker.h>
 
 using Clock = std::chrono::steady_clock;
 using fsecs = std::chrono::duration<double, std::chrono::seconds::period>;
 
-constexpr size_t container_size = 10e6;
-constexpr size_t chunk_size = 1;
+constexpr size_t container_size = 128;
+constexpr size_t repetitions = 10e6;
 
 /*
  * AoS
  */
 
+// 1 Thread
 template <typename Container>
-static void BM_FlatAoS(benchmark::State &state) {
+static void BM_FalseSharing1AoS(benchmark::State &state) {
   Container data;
-  auto &v1 = data.v1;
-  auto &v2 = data.v2;
-  auto &out = data.out;
+  auto &out = data.vout;
+  constexpr auto num_threads = 1;
+
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x1 = i;
+        out[i].x2 = i;
+        out[i].x3 = i;
+        out[i].x4 = i;
+        out[i].x5 = i;
+        out[i].x6 = i;
+        out[i].x7 = i;
+        out[i].x8 = i;
+      };
+    }
+    end_point.arrive_and_wait();
+  };
 
   for (const auto &&_ : state) {
+    // IMPROVEMENT: Reuse threads?
+    auto thread = std::jthread(t1);
+    start_point.arrive_and_wait();
     auto start = Clock::now();
-#pragma omp parallel for num_threads(state.range(0)) schedule(static, 1)
-    for (size_t i = 0; i < v1.size(); ++i) {
-      // printf("tid:%d i: %lu\n", omp_get_thread_num(), i);
-      out[i] = (v2[i].x1 - v1[i].x1) * (v2[i].x1 - v1[i].x1) + (v2[i].x2 - v1[i].x2) * (v2[i].x2 - v1[i].x2);
-    }
+    end_point.arrive_and_wait();
     auto end = Clock::now();
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
@@ -46,109 +58,569 @@ static void BM_FlatAoS(benchmark::State &state) {
   }
 
   state.counters["size"] = out.size();
-  state.counters["num_threads"] = state.range(0);
+  state.counters["num_threads"] = num_threads;
 }
 
+// 2 Threads
 template <typename Container>
-static void BM_NestedAoS(benchmark::State &state) {
+static void BM_FalseSharing2AoS(benchmark::State &state) {
   Container data;
-  auto &v1 = data.v1;
-  auto &v2 = data.v2;
-  auto &vout = data.vout;
+  auto &out = data.vout;
+  constexpr auto num_threads = 2;
+
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x1 = i;
+        out[i].x2 = i;
+        out[i].x3 = i;
+        out[i].x4 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x5 = i;
+        out[i].x6 = i;
+        out[i].x7 = i;
+        out[i].x8 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
 
   for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+
+    start_point.arrive_and_wait();
     auto start = Clock::now();
-#pragma omp parallel for num_threads(state.range(0)) schedule(static, 1)
-    for (size_t i = 0; i < v1.size(); ++i) {
-      vout[i].x1 = (v2[i].x1 - v1[i].x1) * (v2[i].x1 - v1[i].x1);
-      vout[i].x2 = (v2[i].x2 - v1[i].x2) * (v2[i].x2 - v1[i].x2);
-    }
+    end_point.arrive_and_wait();
     auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
     state.SetIterationTime(elapsed_seconds.count());
   }
 
-  state.counters["size"] = vout.size();
-  state.counters["num_threads"] = state.range(0);
+  state.counters["size"] = out.size();
+  state.counters["num_threads"] = num_threads;
 }
+
+// 4 Threads
+template <typename Container>
+static void BM_FalseSharing4AoS(benchmark::State &state) {
+  Container data;
+  auto &out = data.vout;
+  constexpr auto num_threads = 4;
+
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x1 = i;
+        out[i].x2 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x3 = i;
+        out[i].x4 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t3 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x5 = i;
+        out[i].x6 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t4 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x7 = i;
+        out[i].x8 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+    threads.push_back(std::jthread(t3));
+    threads.push_back(std::jthread(t4));
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
+    auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
+
+    auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
+    state.SetIterationTime(elapsed_seconds.count());
+  }
+
+  state.counters["size"] = out.size();
+  state.counters["num_threads"] = num_threads;
+}
+
+// 8 Threads
+template <typename Container>
+static void BM_FalseSharing8AoS(benchmark::State &state) {
+  Container data;
+  auto &out = data.vout;
+  constexpr auto num_threads = 8;
+
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x1 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x2 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t3 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x3 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t4 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x4 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t5 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x5 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t6 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x6 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t7 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x7 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t8 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < out.size(); ++i) {
+        out[i].x8 = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+    threads.push_back(std::jthread(t3));
+    threads.push_back(std::jthread(t4));
+    threads.push_back(std::jthread(t5));
+    threads.push_back(std::jthread(t6));
+    threads.push_back(std::jthread(t7));
+    threads.push_back(std::jthread(t8));
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
+    auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
+
+    auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
+    state.SetIterationTime(elapsed_seconds.count());
+  }
+
+  state.counters["size"] = out.size();
+  state.counters["num_threads"] = num_threads;
+}
+
 /*
- * AoSoA
+ * SoA
  */
 
-template <template <typename, size_t, size_t> typename Container, typename T, size_t N, size_t Sz>
-void BM_FlatAoSoA(benchmark::State &state) {
-  constexpr size_t nChunks = N / Sz;
-  Container<T, N, nChunks> data;
+// 1 Thread
+template <typename Container>
+void BM_FalseSharing1SoA(benchmark::State &state) {
+  Container data;
+  constexpr auto num_threads = 1;
 
-  auto &out = data.out;
-  for (const auto &&_ : state) {
-    auto start = Clock::now();
-#pragma omp parallel for num_threads(state.range(0)) schedule(static, 1)
-    for (size_t i = 0; i < nChunks; ++i) {
-      auto &v1 = data.v1[i];
-      auto &v2 = data.v2[i];
-      size_t out_index = i * Sz;
-      for (size_t j = 0; j < Sz; ++j) {
-        out[out_index + j] =
-            (v2.x1[j] - v1.x1[j]) * (v2.x1[j] - v1.x1[j]) + (v2.x2[j] - v1.x2[j]) * (v2.x2[j] - v1.x2[j]);
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x1[i] = i;
+        data.vout_x2[i] = i;
+        data.vout_x3[i] = i;
+        data.vout_x4[i] = i;
+        data.vout_x5[i] = i;
+        data.vout_x6[i] = i;
+        data.vout_x7[i] = i;
+        data.vout_x8[i] = i;
       }
     }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    auto thread = std::jthread(t1);
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
     auto end = Clock::now();
+
+    thread.request_stop();
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
     state.SetIterationTime(elapsed_seconds.count());
   }
 
-  state.counters["total_size"] = N;
-  state.counters["num_chunks"] = nChunks;
-  state.counters["chunk_size"] = Sz;
-  state.counters["num_threads"] = state.range(0);
+  state.counters["size"] = container_size;
+  state.counters["num_threads"] = num_threads;
 }
 
-template <template <typename, size_t, size_t> typename Container, typename T, size_t N, size_t Sz>
-void BM_NestedAoSoA(benchmark::State &state) {
-  constexpr size_t nChunks = N / Sz;
-  Container<T, N, nChunks> data;
+// // 2 Threads
+template <typename Container>
+void BM_FalseSharing2SoA(benchmark::State &state) {
+  Container data;
+  constexpr auto num_threads = 2;
 
-  for (const auto &&_ : state) {
-    auto start = Clock::now();
-#pragma omp parallel for num_threads(state.range(0)) schedule(static, 1)
-    for (size_t i = 0; i < nChunks; ++i) {
-      auto &v1 = data.v1[i];
-      auto &v2 = data.v2[i];
-      auto &vout = data.vout[i];
-      size_t out_index = i * Sz;
-      for (size_t j = 0; j < Sz; ++j) {
-        vout.x1[j] = (v2.x1[j] - v1.x1[j]) * (v2.x1[j] - v1.x1[j]);
-        vout.x2[j] = (v2.x2[j] - v1.x2[j]) * (v2.x2[j] - v1.x2[j]);
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x1[i] = i;
+        data.vout_x2[i] = i;
+        data.vout_x3[i] = i;
+        data.vout_x4[i] = i;
       }
     }
+    end_point.arrive_and_wait();
+  };
+
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x5[i] = i;
+        data.vout_x6[i] = i;
+        data.vout_x7[i] = i;
+        data.vout_x8[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
     auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
     state.SetIterationTime(elapsed_seconds.count());
   }
 
-  state.counters["total_size"] = N;
-  state.counters["num_chunks"] = nChunks;
-  state.counters["chunk_size"] = Sz;
-  state.counters["num_threads"] = state.range(0);
+  state.counters["size"] = container_size;
+  state.counters["num_threads"] = num_threads;
 }
 
-#define BENCHMARK_ARGS RangeMultiplier(2)->Range(2, 16)->Unit(benchmark::kMillisecond);
+//4 Threads
+template <typename Container>
+void BM_FalseSharing4SoA(benchmark::State &state) {
+  Container data;
+  constexpr auto num_threads = 4;
 
-#define BENCHMARK_ALL_LAYOUTS(OP, TYPE)                                                                                \
-  BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS2Raw<TYPE, container_size>)->BENCHMARK_ARGS;                                     \
-  BENCHMARK_TEMPLATE(BM_##OP##AoSoA, AoSoARaw, TYPE, container_size, chunk_size)->BENCHMARK_ARGS;
-  // BENCHMARK_TEMPLATE(BM_##OP##AoSoA, AoSoAVec, TYPE, container_size, chunk_size)->BENCHMARK_ARGS;                      \
-  // BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS2Vec<TYPE, container_size>)->BENCHMARK_ARGS;
-  // BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS2Arr<TYPE, container_size>)->BENCHMARK_ARGS;                                     \
-  // BENCHMARK_TEMPLATE(BM_##OP##AoSoA, AoSoAArr, TYPE, container_size, chunk_size)->BENCHMARK_ARGS;                      \
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x1[i] = i;
+        data.vout_x2[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
 
-// BENCHMARK_ALL_LAYOUTS(Flat, float)
-// BENCHMARK_ALL_LAYOUTS(Nested, float)
-BENCHMARK_ALL_LAYOUTS(Flat, double)
-BENCHMARK_ALL_LAYOUTS(Nested, double)
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x3[i] = i;
+        data.vout_x4[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t3 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x5[i] = i;
+        data.vout_x6[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t4 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x7[i] = i;
+        data.vout_x8[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+    threads.push_back(std::jthread(t3));
+    threads.push_back(std::jthread(t4));
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
+    auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
+
+    auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
+    state.SetIterationTime(elapsed_seconds.count());
+  }
+
+  state.counters["size"] = container_size;
+  state.counters["num_threads"] = num_threads;
+}
+
+// 8 Threads
+template <typename Container>
+void BM_FalseSharing8SoA(benchmark::State &state) {
+  Container data;
+  constexpr auto num_threads = 8;
+
+  std::barrier start_point{num_threads + 1}; // + main
+  std::barrier end_point{num_threads + 1};   // + main
+  auto t1 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x1[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t2 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x2[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t3 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x3[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t4 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x4[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t5 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x5[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t6 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x6[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t7 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x7[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  auto t8 = [&]() {
+    start_point.arrive_and_wait();
+    for (size_t _ = 0; _ < repetitions; ++_) {
+      for (size_t i = 0; i < data.vout_x1.size(); i++) {
+        data.vout_x8[i] = i;
+      }
+    }
+    end_point.arrive_and_wait();
+  };
+
+  for (const auto &&_ : state) {
+    std::vector<std::jthread> threads;
+    threads.push_back(std::jthread(t1));
+    threads.push_back(std::jthread(t2));
+    threads.push_back(std::jthread(t3));
+    threads.push_back(std::jthread(t4));
+    threads.push_back(std::jthread(t5));
+    threads.push_back(std::jthread(t6));
+    threads.push_back(std::jthread(t7));
+    threads.push_back(std::jthread(t8));
+
+    start_point.arrive_and_wait();
+    auto start = Clock::now();
+    end_point.arrive_and_wait();
+    auto end = Clock::now();
+
+    for (auto &t : threads) {
+      t.request_stop();
+    }
+
+    auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
+    state.SetIterationTime(elapsed_seconds.count());
+  }
+
+  state.counters["size"] = container_size;
+  state.counters["num_threads"] = num_threads;
+}
+
+#define BENCHMARK_ARGS Unit(benchmark::kMillisecond)->UseManualTime();
+
+#define BENCHMARK_ALL_LAYOUTS(THREADS, TYPE)                                                                           \
+  BENCHMARK_TEMPLATE(BM_FalseSharing##THREADS##AoS, AoS8Vec<TYPE, container_size>)->BENCHMARK_ARGS;                    \
+  BENCHMARK_TEMPLATE(BM_FalseSharing##THREADS##SoA, SoA8Vec<TYPE, container_size>)->BENCHMARK_ARGS;
+
+#define BENCHMARK_ALL_THREADS(TYPE)                                                                                    \
+  BENCHMARK_ALL_LAYOUTS(1, TYPE)                                                                                       \
+  BENCHMARK_ALL_LAYOUTS(2, TYPE)                                                                                       \
+  BENCHMARK_ALL_LAYOUTS(4, TYPE)                                                                                       \
+  BENCHMARK_ALL_LAYOUTS(8, TYPE)
+
+BENCHMARK_ALL_THREADS(double);
 
 BENCHMARK_MAIN();
