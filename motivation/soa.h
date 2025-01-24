@@ -33,15 +33,15 @@ void initialize_and_generate(std::vector<T> &vec, int start) {
 template <typename T, size_t N>
 struct SoA2Raw {
 private:
-  alignas(64) T *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_out;
+  alignas(64) T *m_v1_x1, *m_v1_x2, *m_v2_x1, *m_v2_x2, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, out;
+  std::span<T> v1_x1, v1_x2, v2_x1, v2_x2, out;
 
   SoA2Raw() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_out, out, 0);
     std::fill(out.begin(), out.end(), 0);
@@ -49,8 +49,8 @@ public:
 
   ~SoA2Raw() {
     delete[] m_v1_x1;
-    delete[] m_v2_x1;
     delete[] m_v1_x2;
+    delete[] m_v2_x1;
     delete[] m_v2_x2;
     delete[] m_out;
   }
@@ -59,15 +59,15 @@ public:
 template <typename T, size_t N>
 struct SoA2Arr {
 private:
-  alignas(64) std::array<T, N> *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_out;
+  alignas(64) std::array<T, N> *m_v1_x1, *m_v1_x2, *m_v2_x1, *m_v2_x2, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, out;
+  std::span<T> v1_x1, v1_x2, v2_x1, v2_x2, out;
 
   SoA2Arr() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_out, out, 0);
     std::fill(out.begin(), out.end(), 0);
@@ -75,8 +75,8 @@ public:
 
   ~SoA2Arr() {
     delete m_v1_x1;
-    delete m_v2_x1;
     delete m_v1_x2;
+    delete m_v2_x1;
     delete m_v2_x2;
     delete m_out;
   }
@@ -84,15 +84,15 @@ public:
 
 template <typename T, size_t N>
 struct SoA2Vec {
-  alignas(64) std::vector<T> v1_x1, v2_x1, v1_x2, v2_x2, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v2_x1, v2_x2, out;
 
   SoA2Vec() {
     out.resize(N);
     std::fill(out.begin(), out.end(), 0);
 
     initialize_and_generate<T, N>(v1_x1, 0);
-    initialize_and_generate<T, N>(v2_x1, 1);
     initialize_and_generate<T, N>(v1_x2, 1);
+    initialize_and_generate<T, N>(v2_x1, 1);
     initialize_and_generate<T, N>(v2_x2, 2);
   }
 };
@@ -104,19 +104,19 @@ struct SoA2Vec {
 template <typename T, size_t N>
 struct SoA4Raw {
 private:
-  alignas(64) T *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_out;
+  alignas(64) T *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v2_x1, *m_v2_x2, *m_v2_x3, *m_v2_x4, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, out;
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v2_x1, v2_x2, v2_x3, v2_x4, out;
 
   SoA4Raw() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -125,12 +125,12 @@ public:
 
   ~SoA4Raw() {
     delete[] m_v1_x1;
-    delete[] m_v2_x1;
     delete[] m_v1_x2;
-    delete[] m_v2_x2;
     delete[] m_v1_x3;
-    delete[] m_v2_x3;
     delete[] m_v1_x4;
+    delete[] m_v2_x1;
+    delete[] m_v2_x2;
+    delete[] m_v2_x3;
     delete[] m_v2_x4;
     delete[] m_out;
   }
@@ -139,19 +139,19 @@ public:
 template <typename T, size_t N>
 struct SoA4Arr {
 private:
-  alignas(64) std::array<T, N> *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_out;
+  alignas(64) std::array<T, N> *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v2_x1, *m_v2_x2, *m_v2_x3, *m_v2_x4, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, out;
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v2_x1, v2_x2, v2_x3, v2_x4, out;
 
   SoA4Arr() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -160,12 +160,12 @@ public:
 
   ~SoA4Arr() {
     delete m_v1_x1;
-    delete m_v2_x1;
     delete m_v1_x2;
-    delete m_v2_x2;
     delete m_v1_x3;
-    delete m_v2_x3;
     delete m_v1_x4;
+    delete m_v2_x1;
+    delete m_v2_x2;
+    delete m_v2_x3;
     delete m_v2_x4;
     delete m_out;
   }
@@ -173,19 +173,19 @@ public:
 
 template <typename T, size_t N>
 struct SoA4Vec {
-  alignas(64) std::vector<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v2_x1, v2_x2, v2_x3, v2_x4, out;
 
   SoA4Vec() {
     out.resize(N);
     std::fill(out.begin(), out.end(), 0);
 
     initialize_and_generate<T, N>(v1_x1, 1);
-    initialize_and_generate<T, N>(v2_x1, 2);
     initialize_and_generate<T, N>(v1_x2, 2);
-    initialize_and_generate<T, N>(v2_x2, 3);
     initialize_and_generate<T, N>(v1_x3, 3);
-    initialize_and_generate<T, N>(v2_x3, 4);
     initialize_and_generate<T, N>(v1_x4, 4);
+    initialize_and_generate<T, N>(v2_x1, 2);
+    initialize_and_generate<T, N>(v2_x2, 3);
+    initialize_and_generate<T, N>(v2_x3, 4);
     initialize_and_generate<T, N>(v2_x4, 5);
   }
 };
@@ -197,29 +197,29 @@ struct SoA4Vec {
 template <typename T, size_t N>
 struct SoA8Raw {
 private:
-  alignas(64) T *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_v1_x5, *m_v2_x5,
-      *m_v1_x6, *m_v2_x6, *m_v1_x7, *m_v2_x7, *m_v1_x8, *m_v2_x8, *m_out;
+  alignas(64) T *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v1_x5, *m_v1_x6, *m_v1_x7, *m_v1_x8, *m_v2_x1, *m_v2_x2,
+      *m_v2_x3, *m_v2_x4, *m_v2_x5, *m_v2_x6, *m_v2_x7, *m_v2_x8, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7, v2_x7, v1_x8,
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5, v2_x6, v2_x7,
       v2_x8, out;
 
   SoA8Raw() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
-    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
     initialize_and_generate<T, N>(m_v1_x5, v1_x5, 5);
-    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
     initialize_and_generate<T, N>(m_v1_x6, v1_x6, 6);
-    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
     initialize_and_generate<T, N>(m_v1_x7, v1_x7, 7);
-    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v1_x8, v1_x8, 8);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
+    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
+    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
+    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
+    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -228,20 +228,20 @@ public:
 
   ~SoA8Raw() {
     delete[] m_v1_x1;
-    delete[] m_v2_x1;
     delete[] m_v1_x2;
-    delete[] m_v2_x2;
     delete[] m_v1_x3;
-    delete[] m_v2_x3;
     delete[] m_v1_x4;
-    delete[] m_v2_x4;
     delete[] m_v1_x5;
-    delete[] m_v2_x5;
     delete[] m_v1_x6;
-    delete[] m_v2_x6;
     delete[] m_v1_x7;
-    delete[] m_v2_x7;
     delete[] m_v1_x8;
+    delete[] m_v2_x1;
+    delete[] m_v2_x2;
+    delete[] m_v2_x3;
+    delete[] m_v2_x4;
+    delete[] m_v2_x5;
+    delete[] m_v2_x6;
+    delete[] m_v2_x7;
     delete[] m_v2_x8;
     delete[] m_out;
   }
@@ -250,29 +250,29 @@ public:
 template <typename T, size_t N>
 struct SoA8Arr {
 private:
-  alignas(64) std::array<T, N> *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_v1_x5,
-      *m_v2_x5, *m_v1_x6, *m_v2_x6, *m_v1_x7, *m_v2_x7, *m_v1_x8, *m_v2_x8, *m_out;
+  alignas(64) std::array<T, N> *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v1_x5, *m_v1_x6, *m_v1_x7, *m_v1_x8, *m_v2_x1,
+      *m_v2_x2, *m_v2_x3, *m_v2_x4, *m_v2_x5, *m_v2_x6, *m_v2_x7, *m_v2_x8, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7, v2_x7, v1_x8,
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5, v2_x6, v2_x7,
       v2_x8, out;
 
   SoA8Arr() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
-    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
     initialize_and_generate<T, N>(m_v1_x5, v1_x5, 5);
-    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
     initialize_and_generate<T, N>(m_v1_x6, v1_x6, 6);
-    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
     initialize_and_generate<T, N>(m_v1_x7, v1_x7, 7);
-    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v1_x8, v1_x8, 8);
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
+    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
+    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
+    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
+    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -281,20 +281,20 @@ public:
 
   ~SoA8Arr() {
     delete m_v1_x1;
-    delete m_v2_x1;
     delete m_v1_x2;
-    delete m_v2_x2;
     delete m_v1_x3;
-    delete m_v2_x3;
     delete m_v1_x4;
-    delete m_v2_x4;
     delete m_v1_x5;
-    delete m_v2_x5;
     delete m_v1_x6;
-    delete m_v2_x6;
     delete m_v1_x7;
-    delete m_v2_x7;
     delete m_v1_x8;
+    delete m_v2_x1;
+    delete m_v2_x2;
+    delete m_v2_x3;
+    delete m_v2_x4;
+    delete m_v2_x5;
+    delete m_v2_x6;
+    delete m_v2_x7;
     delete m_v2_x8;
     delete m_out;
   }
@@ -302,28 +302,29 @@ public:
 
 template <typename T, size_t N>
 struct SoA8Vec {
-  alignas(64) std::vector<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7,
-      v2_x7, v1_x8, v2_x8, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5,
+      v2_x6, v2_x7, v2_x8, out;
 
   SoA8Vec() {
     out.resize(N);
     std::fill(out.begin(), out.end(), 0);
 
     initialize_and_generate<T, N>(v1_x1, 1);
-    initialize_and_generate<T, N>(v2_x1, 2);
     initialize_and_generate<T, N>(v1_x2, 2);
-    initialize_and_generate<T, N>(v2_x2, 3);
     initialize_and_generate<T, N>(v1_x3, 3);
-    initialize_and_generate<T, N>(v2_x3, 4);
     initialize_and_generate<T, N>(v1_x4, 4);
-    initialize_and_generate<T, N>(v2_x4, 5);
     initialize_and_generate<T, N>(v1_x5, 5);
-    initialize_and_generate<T, N>(v2_x5, 6);
     initialize_and_generate<T, N>(v1_x6, 6);
-    initialize_and_generate<T, N>(v2_x6, 7);
     initialize_and_generate<T, N>(v1_x7, 7);
-    initialize_and_generate<T, N>(v2_x7, 8);
     initialize_and_generate<T, N>(v1_x8, 8);
+
+    initialize_and_generate<T, N>(v2_x1, 2);
+    initialize_and_generate<T, N>(v2_x2, 3);
+    initialize_and_generate<T, N>(v2_x3, 4);
+    initialize_and_generate<T, N>(v2_x4, 5);
+    initialize_and_generate<T, N>(v2_x5, 6);
+    initialize_and_generate<T, N>(v2_x6, 7);
+    initialize_and_generate<T, N>(v2_x7, 8);
     initialize_and_generate<T, N>(v2_x8, 9);
   }
 };
@@ -335,33 +336,34 @@ struct SoA8Vec {
 template <typename T, size_t N>
 struct SoA20Raw {
 private:
-  alignas(64) T *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_v1_x5, *m_v2_x5,
-      *m_v1_x6, *m_v2_x6, *m_v1_x7, *m_v2_x7, *m_v1_x8, *m_v2_x8, *m_v1_x9, *m_v2_x9, *m_v1_x10, *m_v2_x10, *m_out;
+  alignas(64) T *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v1_x5, *m_v1_x6, *m_v1_x7, *m_v1_x8, *m_v1_x9, *m_v1_x10,
+      *m_v2_x1, *m_v2_x2, *m_v2_x3, *m_v2_x4, *m_v2_x5, *m_v2_x6, *m_v2_x7, *m_v2_x8, *m_v2_x9, *m_v2_x10, *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7, v2_x7, v1_x8,
-      v2_x8, v1_x9, v2_x9, v1_x10, v2_x10, out;
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v1_x9, v1_x10, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5,
+      v2_x6, v2_x7, v2_x8, v2_x9, v2_x10, out;
 
   SoA20Raw() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
-    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
     initialize_and_generate<T, N>(m_v1_x5, v1_x5, 5);
-    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
     initialize_and_generate<T, N>(m_v1_x6, v1_x6, 6);
-    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
     initialize_and_generate<T, N>(m_v1_x7, v1_x7, 7);
-    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v1_x8, v1_x8, 8);
-    initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
     initialize_and_generate<T, N>(m_v1_x9, v1_x9, 9);
-    initialize_and_generate<T, N>(m_v2_x9, v2_x9, 10);
     initialize_and_generate<T, N>(m_v1_x10, v1_x10, 10);
+
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
+    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
+    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
+    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
+    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
+    initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
+    initialize_and_generate<T, N>(m_v2_x9, v2_x9, 10);
     initialize_and_generate<T, N>(m_v2_x10, v2_x10, 11);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -370,24 +372,24 @@ public:
 
   ~SoA20Raw() {
     delete[] m_v1_x1;
-    delete[] m_v2_x1;
     delete[] m_v1_x2;
-    delete[] m_v2_x2;
     delete[] m_v1_x3;
-    delete[] m_v2_x3;
     delete[] m_v1_x4;
-    delete[] m_v2_x4;
     delete[] m_v1_x5;
-    delete[] m_v2_x5;
     delete[] m_v1_x6;
-    delete[] m_v2_x6;
     delete[] m_v1_x7;
-    delete[] m_v2_x7;
     delete[] m_v1_x8;
-    delete[] m_v2_x8;
     delete[] m_v1_x9;
-    delete[] m_v2_x9;
     delete[] m_v1_x10;
+    delete[] m_v2_x1;
+    delete[] m_v2_x2;
+    delete[] m_v2_x3;
+    delete[] m_v2_x4;
+    delete[] m_v2_x5;
+    delete[] m_v2_x6;
+    delete[] m_v2_x7;
+    delete[] m_v2_x8;
+    delete[] m_v2_x9;
     delete[] m_v2_x10;
     delete[] m_out;
   }
@@ -396,34 +398,35 @@ public:
 template <typename T, size_t N>
 struct SoA20Arr {
 private:
-  alignas(64) std::array<T, N> *m_v1_x1, *m_v2_x1, *m_v1_x2, *m_v2_x2, *m_v1_x3, *m_v2_x3, *m_v1_x4, *m_v2_x4, *m_v1_x5,
-      *m_v2_x5, *m_v1_x6, *m_v2_x6, *m_v1_x7, *m_v2_x7, *m_v1_x8, *m_v2_x8, *m_v1_x9, *m_v2_x9, *m_v1_x10, *m_v2_x10,
+  alignas(64) std::array<T, N> *m_v1_x1, *m_v1_x2, *m_v1_x3, *m_v1_x4, *m_v1_x5, *m_v1_x6, *m_v1_x7, *m_v1_x8, *m_v1_x9,
+      *m_v1_x10, *m_v2_x1, *m_v2_x2, *m_v2_x3, *m_v2_x4, *m_v2_x5, *m_v2_x6, *m_v2_x7, *m_v2_x8, *m_v2_x9, *m_v2_x10,
       *m_out;
 
 public:
-  std::span<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7, v2_x7, v1_x8,
-      v2_x8, v1_x9, v2_x9, v1_x10, v2_x10, out;
+  std::span<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v1_x9, v1_x10, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5,
+      v2_x6, v2_x7, v2_x8, v2_x9, v2_x10, out;
 
   SoA20Arr() {
     initialize_and_generate<T, N>(m_v1_x1, v1_x1, 1);
-    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
     initialize_and_generate<T, N>(m_v1_x2, v1_x2, 2);
-    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
     initialize_and_generate<T, N>(m_v1_x3, v1_x3, 3);
-    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
     initialize_and_generate<T, N>(m_v1_x4, v1_x4, 4);
-    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
     initialize_and_generate<T, N>(m_v1_x5, v1_x5, 5);
-    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
     initialize_and_generate<T, N>(m_v1_x6, v1_x6, 6);
-    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
     initialize_and_generate<T, N>(m_v1_x7, v1_x7, 7);
-    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
     initialize_and_generate<T, N>(m_v1_x8, v1_x8, 8);
-    initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
     initialize_and_generate<T, N>(m_v1_x9, v1_x9, 9);
-    initialize_and_generate<T, N>(m_v2_x9, v2_x9, 10);
     initialize_and_generate<T, N>(m_v1_x10, v1_x10, 10);
+
+    initialize_and_generate<T, N>(m_v2_x1, v2_x1, 2);
+    initialize_and_generate<T, N>(m_v2_x2, v2_x2, 3);
+    initialize_and_generate<T, N>(m_v2_x3, v2_x3, 4);
+    initialize_and_generate<T, N>(m_v2_x4, v2_x4, 5);
+    initialize_and_generate<T, N>(m_v2_x5, v2_x5, 6);
+    initialize_and_generate<T, N>(m_v2_x6, v2_x6, 7);
+    initialize_and_generate<T, N>(m_v2_x7, v2_x7, 8);
+    initialize_and_generate<T, N>(m_v2_x8, v2_x8, 9);
+    initialize_and_generate<T, N>(m_v2_x9, v2_x9, 10);
     initialize_and_generate<T, N>(m_v2_x10, v2_x10, 11);
 
     initialize_and_generate<T, N>(m_out, out, 0);
@@ -432,24 +435,24 @@ public:
 
   ~SoA20Arr() {
     delete m_v1_x1;
-    delete m_v2_x1;
     delete m_v1_x2;
-    delete m_v2_x2;
     delete m_v1_x3;
-    delete m_v2_x3;
     delete m_v1_x4;
-    delete m_v2_x4;
     delete m_v1_x5;
-    delete m_v2_x5;
     delete m_v1_x6;
-    delete m_v2_x6;
     delete m_v1_x7;
-    delete m_v2_x7;
     delete m_v1_x8;
-    delete m_v2_x8;
     delete m_v1_x9;
-    delete m_v2_x9;
     delete m_v1_x10;
+    delete m_v2_x1;
+    delete m_v2_x2;
+    delete m_v2_x3;
+    delete m_v2_x4;
+    delete m_v2_x5;
+    delete m_v2_x6;
+    delete m_v2_x7;
+    delete m_v2_x8;
+    delete m_v2_x9;
     delete m_v2_x10;
     delete m_out;
   }
@@ -457,33 +460,35 @@ public:
 
 template <typename T, size_t N>
 struct SoA20Vec {
-  alignas(64) std::vector<T> v1_x1, v2_x1, v1_x2, v2_x2, v1_x3, v2_x3, v1_x4, v2_x4, v1_x5, v2_x5, v1_x6, v2_x6, v1_x7,
-      v2_x7, v1_x8, v2_x8, v1_x9, v2_x9, v1_x10, v2_x10, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v1_x9, v1_x10, v2_x1, v2_x2, v2_x3,
+      v2_x4, v2_x5, v2_x6, v2_x7, v2_x8, v2_x9, v2_x10, out;
 
   SoA20Vec() {
     out.resize(N);
     std::fill(out.begin(), out.end(), 0);
 
     initialize_and_generate<T, N>(v1_x1, 1);
-    initialize_and_generate<T, N>(v2_x1, 2);
     initialize_and_generate<T, N>(v1_x2, 2);
-    initialize_and_generate<T, N>(v2_x2, 3);
     initialize_and_generate<T, N>(v1_x3, 3);
-    initialize_and_generate<T, N>(v2_x3, 4);
     initialize_and_generate<T, N>(v1_x4, 4);
-    initialize_and_generate<T, N>(v2_x4, 5);
     initialize_and_generate<T, N>(v1_x5, 5);
-    initialize_and_generate<T, N>(v2_x5, 6);
     initialize_and_generate<T, N>(v1_x6, 6);
-    initialize_and_generate<T, N>(v2_x6, 7);
     initialize_and_generate<T, N>(v1_x7, 7);
-    initialize_and_generate<T, N>(v2_x7, 8);
     initialize_and_generate<T, N>(v1_x8, 8);
-    initialize_and_generate<T, N>(v2_x8, 9);
     initialize_and_generate<T, N>(v1_x9, 9);
-    initialize_and_generate<T, N>(v2_x9, 10);
     initialize_and_generate<T, N>(v1_x10, 10);
+
+    initialize_and_generate<T, N>(v2_x1, 2);
+    initialize_and_generate<T, N>(v2_x2, 3);
+    initialize_and_generate<T, N>(v2_x3, 4);
+    initialize_and_generate<T, N>(v2_x4, 5);
+    initialize_and_generate<T, N>(v2_x5, 6);
+    initialize_and_generate<T, N>(v2_x6, 7);
+    initialize_and_generate<T, N>(v2_x7, 8);
+    initialize_and_generate<T, N>(v2_x8, 9);
+    initialize_and_generate<T, N>(v2_x9, 10);
     initialize_and_generate<T, N>(v2_x10, 11);
   }
 };
+
 #endif // SOA_H

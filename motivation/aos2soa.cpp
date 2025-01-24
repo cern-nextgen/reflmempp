@@ -21,14 +21,13 @@ constexpr size_t container_size = 10e6;
 template <typename Container>
 static void BM_MemoryBoundAoS(benchmark::State &state) {
   Container data;
-  auto &v1 = data.v1;
-  auto &v2 = data.v2;
+  auto &v = data.v1;
   auto &out = data.out;
 
   for (const auto &&_ : state) {
     auto start = Clock::now();
-    std::transform(v1.begin(), v1.end(), v2.begin(), out.begin(), [](const auto &s1, const auto &s2) {
-      return (s2.x1 - s1.x1) * (s2.x1 - s1.x1) + (s2.x2 - s1.x2) * (s2.x2 - s1.x2);
+    std::transform(v.begin(), v.end(), out.begin(), [](const auto &in) {
+      return (in.x1 - in.x2) * (in.x1 - in.x2) + (in.x2 - in.x1) * (in.x2 - in.x1);
     });
     auto end = Clock::now();
 
@@ -46,28 +45,27 @@ static void BM_MemoryBoundAoS(benchmark::State &state) {
 template <typename Container>
 static void BM_ComputeBoundAoS(benchmark::State &state) {
   Container data;
-  auto &v1 = data.v1;
-  auto &v2 = data.v2;
+  auto &v = data.v1;
   auto &out = data.out;
 
   for (const auto &&_ : state) {
     auto start = Clock::now();
-    std::transform(v1.begin(), v1.end(), v2.begin(), out.begin(), [](const auto &s1, const auto &s2) {
-      return (s2.x1 - s1.x2) * (s2.x2 - s1.x1) + (s2.x2 - s1.x1) * (s2.x1 - s1.x2) + (s2.x1 + s1.x2) * (s2.x2 - s1.x1) +
-             (s2.x2 - s1.x1) * (s2.x1 + s1.x2) + (s2.x1 + s1.x2) * (s2.x2 + s1.x1) + (s2.x2 + s1.x1) * (s2.x1 + s1.x2) +
-             (s2.x1 - s1.x1) * (s2.x1 - s1.x1) + (s2.x2 - s1.x2) * (s2.x2 - s1.x2) + (s2.x1 + s1.x1) * (s2.x1 + s1.x1) +
-             (s2.x2 + s1.x2) * (s2.x2 + s1.x2) + (s2.x1 - s1.x1) * (s2.x1 - s1.x1) - (s2.x1 - s1.x2) / (s2.x2 - s1.x1) -
-             (s2.x2 - s1.x1) / (s2.x1 - s1.x2) - (s2.x1 + s1.x2) / (s2.x2 - s1.x1) - (s2.x2 - s1.x1) / (s2.x1 + s1.x2) -
-             (s2.x1 + s1.x2) / (s2.x2 + s1.x1) - (s2.x2 + s1.x1) / (s2.x1 + s1.x2) - (s2.x1 - s1.x1) / (s2.x1 - s1.x1) -
-             (s2.x2 - s1.x2) / (s2.x2 - s1.x2) - (s2.x1 + s1.x1) / (s2.x1 + s1.x1) - (s2.x2 + s1.x2) / (s2.x2 + s1.x2) -
-             (s2.x1 * s1.x1) - (s2.x1 * s1.x1) + (s2.x1 * s1.x2) - (s2.x2 * s1.x1) + (s2.x2 * s1.x1) - (s2.x1 * s1.x2) +
-             (s2.x1 * s1.x2) - (s2.x2 * s1.x1) + (s2.x2 * s1.x1) - (s2.x1 * s1.x2) + (s2.x1 * s1.x2) - (s2.x2 * s1.x1) +
-             (s2.x2 * s1.x1) - (s2.x1 * s1.x2) + (s2.x1 * s1.x1) - (s2.x1 * s1.x1) + (s2.x2 * s1.x2) - (s2.x2 * s1.x2) +
-             (s2.x1 * s1.x1) - (s2.x1 * s1.x1) + (s2.x2 / s1.x2) + (s2.x2 / s1.x2) - (s2.x1 / s1.x1) + (s2.x1 / s1.x1) -
-             (s2.x1 / s1.x2) + (s2.x2 / s1.x1) - (s2.x2 / s1.x1) + (s2.x1 / s1.x2) - (s2.x1 / s1.x2) + (s2.x2 / s1.x1) -
-             (s2.x2 / s1.x1) + (s2.x1 / s1.x2) - (s2.x1 / s1.x2) + (s2.x2 / s1.x1) - (s2.x2 / s1.x1) + (s2.x1 / s1.x2) -
-             (s2.x1 / s1.x1) + (s2.x1 / s1.x1) - (s2.x2 / s1.x2) + (s2.x2 / s1.x2) - (s2.x1 / s1.x1) + (s2.x1 / s1.x1) -
-             (s2.x2 / s1.x2) + (s2.x2 / s1.x2);
+    std::transform(v.begin(), v.end(), out.begin(), [](const auto &in) {
+      return (in.x1 - in.x2) * (in.x2 - in.x1) + (in.x2 - in.x1) * (in.x1 - in.x2) + (in.x1 + in.x2) * (in.x2 - in.x1) +
+             (in.x2 - in.x1) * (in.x1 + in.x2) + (in.x1 + in.x2) * (in.x2 + in.x1) + (in.x2 + in.x1) * (in.x1 + in.x2) +
+             (in.x1 - in.x1) * (in.x1 - in.x1) + (in.x2 - in.x2) * (in.x2 - in.x2) + (in.x1 + in.x1) * (in.x1 + in.x1) +
+             (in.x2 + in.x2) * (in.x2 + in.x2) + (in.x1 - in.x1) * (in.x1 - in.x1) - (in.x1 - in.x2) / (in.x2 - in.x1) -
+             (in.x2 - in.x1) / (in.x1 - in.x2) - (in.x1 + in.x2) / (in.x2 - in.x1) - (in.x2 - in.x1) / (in.x1 + in.x2) -
+             (in.x1 + in.x2) / (in.x2 + in.x1) - (in.x2 + in.x1) / (in.x1 + in.x2) - (in.x1 - in.x1) / (in.x1 - in.x1) -
+             (in.x2 - in.x2) / (in.x2 - in.x2) - (in.x1 + in.x1) / (in.x1 + in.x1) - (in.x2 + in.x2) / (in.x2 + in.x2) -
+             (in.x1 * in.x1) - (in.x1 * in.x1) + (in.x1 * in.x2) - (in.x2 * in.x1) + (in.x2 * in.x1) - (in.x1 * in.x2) +
+             (in.x1 * in.x2) - (in.x2 * in.x1) + (in.x2 * in.x1) - (in.x1 * in.x2) + (in.x1 * in.x2) - (in.x2 * in.x1) +
+             (in.x2 * in.x1) - (in.x1 * in.x2) + (in.x1 * in.x1) - (in.x1 * in.x1) + (in.x2 * in.x2) - (in.x2 * in.x2) +
+             (in.x1 * in.x1) - (in.x1 * in.x1) + (in.x2 / in.x2) + (in.x2 / in.x2) - (in.x1 / in.x1) + (in.x1 / in.x1) -
+             (in.x1 / in.x2) + (in.x2 / in.x1) - (in.x2 / in.x1) + (in.x1 / in.x2) - (in.x1 / in.x2) + (in.x2 / in.x1) -
+             (in.x2 / in.x1) + (in.x1 / in.x2) - (in.x1 / in.x2) + (in.x2 / in.x1) - (in.x2 / in.x1) + (in.x1 / in.x2) -
+             (in.x1 / in.x1) + (in.x1 / in.x1) - (in.x2 / in.x2) + (in.x2 / in.x2) - (in.x1 / in.x1) + (in.x1 / in.x1) -
+             (in.x2 / in.x2) + (in.x2 / in.x2);
     });
     auto end = Clock::now();
 
@@ -84,19 +82,15 @@ static void BM_ComputeBoundAoS(benchmark::State &state) {
 template <class Container>
 static void BM_MemoryBoundSoA(benchmark::State &state) {
   Container data;
-  auto deltaR2 = [](const auto &v1_x1, const auto &v2_x1, const auto &v1_x2, const auto &v2_x2) {
-    return (v2_x1 - v1_x1) * (v2_x1 - v1_x1) + (v2_x2 - v1_x2) * (v2_x2 - v1_x2);
-  };
+  auto deltaR2 = [](const auto &x1, const auto &x2) { return (x1 - x2) * (x1 - x2) + (x2 - x1) * (x2 - x1); };
 
-  auto &v1_x1 = data.v1_x1;
-  auto &v2_x1 = data.v2_x1;
-  auto &v1_x2 = data.v1_x2;
-  auto &v2_x2 = data.v2_x2;
+  auto &v_x1 = data.v1_x1;
+  auto &v_x2 = data.v1_x2;
   auto &out = data.out;
 
   for (const auto &&_ : state) {
     auto start = Clock::now();
-    std::ranges::copy(std::views::zip_transform(deltaR2, v1_x1, v2_x1, v1_x2, v2_x2), out.begin());
+    std::ranges::copy(std::views::zip_transform(deltaR2, v_x1, v_x2), out.begin());
     auto end = Clock::now();
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
@@ -113,33 +107,27 @@ static void BM_MemoryBoundSoA(benchmark::State &state) {
 template <class Container>
 static void BM_ComputeBoundSoA(benchmark::State &state) {
   Container data;
-  auto deltaR2 = [](const auto &v1_x1, const auto &v2_x1, const auto &v1_x2, const auto &v2_x2) {
-    return (v2_x1 - v1_x2) * (v2_x2 - v1_x1) + (v2_x2 - v1_x1) * (v2_x1 - v1_x2) + (v2_x1 + v1_x2) * (v2_x2 - v1_x1) +
-           (v2_x2 - v1_x1) * (v2_x1 + v1_x2) + (v2_x1 + v1_x2) * (v2_x2 + v1_x1) + (v2_x2 + v1_x1) * (v2_x1 + v1_x2) +
-           (v2_x1 - v1_x1) * (v2_x1 - v1_x1) + (v2_x2 - v1_x2) * (v2_x2 - v1_x2) + (v2_x1 + v1_x1) * (v2_x1 + v1_x1) +
-           (v2_x2 + v1_x2) * (v2_x2 + v1_x2) + (v2_x1 - v1_x1) * (v2_x1 - v1_x1) - (v2_x1 - v1_x2) / (v2_x2 - v1_x1) -
-           (v2_x2 - v1_x1) / (v2_x1 - v1_x2) - (v2_x1 + v1_x2) / (v2_x2 - v1_x1) - (v2_x2 - v1_x1) / (v2_x1 + v1_x2) -
-           (v2_x1 + v1_x2) / (v2_x2 + v1_x1) - (v2_x2 + v1_x1) / (v2_x1 + v1_x2) - (v2_x1 - v1_x1) / (v2_x1 - v1_x1) -
-           (v2_x2 - v1_x2) / (v2_x2 - v1_x2) - (v2_x1 + v1_x1) / (v2_x1 + v1_x1) - (v2_x2 + v1_x2) / (v2_x2 + v1_x2) -
-           (v2_x1 * v1_x1) - (v2_x1 * v1_x1) + (v2_x1 * v1_x2) - (v2_x2 * v1_x1) + (v2_x2 * v1_x1) - (v2_x1 * v1_x2) +
-           (v2_x1 * v1_x2) - (v2_x2 * v1_x1) + (v2_x2 * v1_x1) - (v2_x1 * v1_x2) + (v2_x1 * v1_x2) - (v2_x2 * v1_x1) +
-           (v2_x2 * v1_x1) - (v2_x1 * v1_x2) + (v2_x1 * v1_x1) - (v2_x1 * v1_x1) + (v2_x2 * v1_x2) - (v2_x2 * v1_x2) +
-           (v2_x1 * v1_x1) - (v2_x1 * v1_x1) + (v2_x2 / v1_x2) + (v2_x2 / v1_x2) - (v2_x1 / v1_x1) + (v2_x1 / v1_x1) -
-           (v2_x1 / v1_x2) + (v2_x2 / v1_x1) - (v2_x2 / v1_x1) + (v2_x1 / v1_x2) - (v2_x1 / v1_x2) + (v2_x2 / v1_x1) -
-           (v2_x2 / v1_x1) + (v2_x1 / v1_x2) - (v2_x1 / v1_x2) + (v2_x2 / v1_x1) - (v2_x2 / v1_x1) + (v2_x1 / v1_x2) -
-           (v2_x1 / v1_x1) + (v2_x1 / v1_x1) - (v2_x2 / v1_x2) + (v2_x2 / v1_x2) - (v2_x1 / v1_x1) + (v2_x1 / v1_x1) -
-           (v2_x2 / v1_x2) + (v2_x2 / v1_x2);
+  auto deltaR2 = [](const auto &x1, const auto &x2) {
+    return (x1 - x2) * (x2 - x1) + (x2 - x1) * (x1 - x2) + (x1 + x2) * (x2 - x1) + (x2 - x1) * (x1 + x2) +
+           (x1 + x2) * (x2 + x1) + (x2 + x1) * (x1 + x2) + (x1 - x1) * (x1 - x1) + (x2 - x2) * (x2 - x2) +
+           (x1 + x1) * (x1 + x1) + (x2 + x2) * (x2 + x2) + (x1 - x1) * (x1 - x1) - (x1 - x2) / (x2 - x1) -
+           (x2 - x1) / (x1 - x2) - (x1 + x2) / (x2 - x1) - (x2 - x1) / (x1 + x2) - (x1 + x2) / (x2 + x1) -
+           (x2 + x1) / (x1 + x2) - (x1 - x1) / (x1 - x1) - (x2 - x2) / (x2 - x2) - (x1 + x1) / (x1 + x1) -
+           (x2 + x2) / (x2 + x2) - (x1 * x1) - (x1 * x1) + (x1 * x2) - (x2 * x1) + (x2 * x1) - (x1 * x2) + (x1 * x2) -
+           (x2 * x1) + (x2 * x1) - (x1 * x2) + (x1 * x2) - (x2 * x1) + (x2 * x1) - (x1 * x2) + (x1 * x1) - (x1 * x1) +
+           (x2 * x2) - (x2 * x2) + (x1 * x1) - (x1 * x1) + (x2 / x2) + (x2 / x2) - (x1 / x1) + (x1 / x1) - (x1 / x2) +
+           (x2 / x1) - (x2 / x1) + (x1 / x2) - (x1 / x2) + (x2 / x1) - (x2 / x1) + (x1 / x2) - (x1 / x2) + (x2 / x1) -
+           (x2 / x1) + (x1 / x2) - (x1 / x1) + (x1 / x1) - (x2 / x2) + (x2 / x2) - (x1 / x1) + (x1 / x1) - (x2 / x2) +
+           (x2 / x2);
   };
 
-  auto &v1_x1 = data.v1_x1;
-  auto &v2_x1 = data.v2_x1;
-  auto &v1_x2 = data.v1_x2;
-  auto &v2_x2 = data.v2_x2;
+  auto &v_x1 = data.v1_x1;
+  auto &v_x2 = data.v1_x2;
   auto &out = data.out;
 
   for (const auto &&_ : state) {
     auto start = Clock::now();
-    std::ranges::copy(std::views::zip_transform(deltaR2, v1_x1, v2_x1, v1_x2, v2_x2), out.begin());
+    std::ranges::copy(std::views::zip_transform(deltaR2, v_x1, v_x2), out.begin());
     auto end = Clock::now();
 
     auto elapsed_seconds = std::chrono::duration_cast<fsecs>(end - start);
@@ -149,21 +137,15 @@ static void BM_ComputeBoundSoA(benchmark::State &state) {
   state.counters["size"] = data.out.size();
 }
 
+#define BENCHMARK_ARGS Unit(benchmark::kMillisecond)->UseManualTime();
+
 #define BENCHMARK_ALL_TYPES(OP, MEMBERS, TYPE, SIZE)                                                                   \
-  BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Raw<TYPE, SIZE>)->Unit(benchmark::kMillisecond)->UseManualTime();     \
-  BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Raw<TYPE, SIZE>)->Unit(benchmark::kMillisecond)->UseManualTime();     \
-  BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Arr<TYPE, container_size>)                                            \
-      ->Unit(benchmark::kMillisecond)                                                                                  \
-      ->UseManualTime();                                                                                               \
-  BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Arr<TYPE, container_size>)                                            \
-      ->Unit(benchmark::kMillisecond)                                                                                  \
-      ->UseManualTime();                                                                                               \
-  BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Vec<TYPE, container_size>)                                            \
-      ->Unit(benchmark::kMillisecond)                                                                                  \
-      ->UseManualTime();                                                                                               \
-  BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Vec<TYPE, container_size>)                                            \
-      ->Unit(benchmark::kMillisecond)                                                                                  \
-      ->UseManualTime();
+  BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Vec<TYPE, container_size>)->BENCHMARK_ARGS;                           \
+  BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Vec<TYPE, container_size>)->BENCHMARK_ARGS;
+  // BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Raw<TYPE, SIZE>)->BENCHMARK_ARGS;                                     \
+  // BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Raw<TYPE, SIZE>)->BENCHMARK_ARGS;                                     \
+  // BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Arr<TYPE, container_size>)->BENCHMARK_ARGS;                           \
+  // BENCHMARK_TEMPLATE(BM_##OP##SoA, SoA##MEMBERS##Arr<TYPE, container_size>)->BENCHMARK_ARGS;
 
 #define BENCHMARK_ALL_MEMBERS(TYPE, SIZE)                                                                              \
   BENCHMARK_ALL_TYPES(MemoryBound, 2, TYPE, SIZE)                                                                      \
@@ -175,7 +157,7 @@ static void BM_ComputeBoundSoA(benchmark::State &state) {
   BENCHMARK_ALL_TYPES(ComputeBound, 8, TYPE, SIZE)                                                                     \
   BENCHMARK_ALL_TYPES(ComputeBound, 20, TYPE, SIZE)
 
-BENCHMARK_ALL_MEMBERS(float, container_size)
+// BENCHMARK_ALL_MEMBERS(float, container_size)
 BENCHMARK_ALL_MEMBERS(double, container_size)
 
 BENCHMARK_MAIN();
