@@ -5,6 +5,7 @@
 #include <array>
 #include <span>
 #include <vector>
+#include <iostream>
 
 /*
  * 2 Data Members
@@ -31,6 +32,19 @@ struct S4 {
 template <typename T>
 S4<T> GenerateS4(int i) {
   return S4<T>{(T)i, (T)1 + i, (T)2 + i, (T)3 + i};
+}
+
+/*
+ * 8 Data Members
+ */
+template <typename T>
+struct S8 {
+  T x1, x2, x3, x4, x5, x6, x7, x8;
+};
+
+template <typename T>
+S8<T> GenerateS8(int i) {
+  return S8<T>{(T)i, (T)1 + i, (T)2 + i, (T)3 + i, (T)4 + i, (T)5 + i, (T)6 + i, (T)7 + i};
 }
 
 /*
@@ -152,16 +166,6 @@ template <typename T, size_t N>
 using AoS4Vec = AoSBaseVec<T, N, S4, GenerateS4>;
 
 // Specializations for S8 (25%)
-template <typename T>
-struct S8 {
-  T x1, x2, x3, x4, x5, x6, x7, x8;
-};
-
-template <typename T>
-S8<T> GenerateS8(int i) {
-  return S8<T>{(T)i, (T)1 + i, (T)2 + i, (T)3 + i, (T)4 + i, (T)5 + i, (T)6 + i, (T)7 + i};
-}
-
 template <typename T, size_t N>
 using AoS8Raw = AoSBaseRaw<T, N, S8, GenerateS8>;
 
