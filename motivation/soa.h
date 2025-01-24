@@ -85,6 +85,7 @@ public:
 template <typename T, size_t N>
 struct SoA2Vec {
   alignas(64) std::vector<T> v1_x1, v1_x2, v2_x1, v2_x2, out;
+  alignas(64) std::vector<T> vout_x1, vout_x2, out;
 
   SoA2Vec() {
     out.resize(N);
@@ -94,6 +95,8 @@ struct SoA2Vec {
     initialize_and_generate<T, N>(v1_x2, 1);
     initialize_and_generate<T, N>(v2_x1, 1);
     initialize_and_generate<T, N>(v2_x2, 2);
+    initialize_and_generate<T, N>(vout_x1, 0);
+    initialize_and_generate<T, N>(vout_x2, 0);
   }
 };
 
@@ -173,7 +176,8 @@ public:
 
 template <typename T, size_t N>
 struct SoA4Vec {
-  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v2_x1, v2_x2, v2_x3, v2_x4, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v2_x1, v2_x2, v2_x3, v2_x4;
+  alignas(64) std::vector<T> vout_x1, vout_x2, vout_x3, vout_x4, out;
 
   SoA4Vec() {
     out.resize(N);
@@ -187,6 +191,10 @@ struct SoA4Vec {
     initialize_and_generate<T, N>(v2_x2, 3);
     initialize_and_generate<T, N>(v2_x3, 4);
     initialize_and_generate<T, N>(v2_x4, 5);
+    initialize_and_generate<T, N>(vout_x1, 0);
+    initialize_and_generate<T, N>(vout_x2, 0);
+    initialize_and_generate<T, N>(vout_x3, 0);
+    initialize_and_generate<T, N>(vout_x4, 0);
   }
 };
 
@@ -303,7 +311,8 @@ public:
 template <typename T, size_t N>
 struct SoA8Vec {
   alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v2_x1, v2_x2, v2_x3, v2_x4, v2_x5,
-      v2_x6, v2_x7, v2_x8, out;
+      v2_x6, v2_x7, v2_x8;
+  alignas(64) std::vector<T> vout_x1, vout_x2, vout_x3, vout_x4, vout_x5, vout_x6, vout_x7, vout_x8, out;
 
   SoA8Vec() {
     out.resize(N);
@@ -326,9 +335,17 @@ struct SoA8Vec {
     initialize_and_generate<T, N>(v2_x6, 7);
     initialize_and_generate<T, N>(v2_x7, 8);
     initialize_and_generate<T, N>(v2_x8, 9);
+
+    initialize_and_generate<T, N>(vout_x1, 0);
+    initialize_and_generate<T, N>(vout_x2, 0);
+    initialize_and_generate<T, N>(vout_x3, 0);
+    initialize_and_generate<T, N>(vout_x4, 0);
+    initialize_and_generate<T, N>(vout_x5, 0);
+    initialize_and_generate<T, N>(vout_x6, 0);
+    initialize_and_generate<T, N>(vout_x7, 0);
+    initialize_and_generate<T, N>(vout_x8, 0);
   }
 };
-
 /*
  * 20 Data Members
  */
@@ -460,8 +477,12 @@ public:
 
 template <typename T, size_t N>
 struct SoA20Vec {
-  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v1_x9, v1_x10, v2_x1, v2_x2, v2_x3,
-      v2_x4, v2_x5, v2_x6, v2_x7, v2_x8, v2_x9, v2_x10, out;
+  alignas(64) std::vector<T> v1_x1, v1_x2, v1_x3, v1_x4, v1_x5, v1_x6, v1_x7, v1_x8, v1_x9, v1_x10, v1_x11, v1_x12,
+      v1_x13, v1_x14, v1_x15, v1_x16, v1_x17, v1_x18, v1_x19, v1_x20;
+  alignas(64) std::vector<T> v2_x1, v2_x2, v2_x3, v2_x4, v2_x5, v2_x6, v2_x7, v2_x8, v2_x9, v2_x10, v2_x11, v2_x12,
+      v2_x13, v2_x14, v2_x15, v2_x16, v2_x17, v2_x18, v2_x19, v2_x20;
+  alignas(64) std::vector<T> vout_x1, vout_x2, vout_x3, vout_x4, vout_x5, vout_x6, vout_x7, vout_x8, vout_x9, vout_x10,
+      vout_x11, vout_x12, vout_x13, vout_x14, vout_x15, vout_x16, vout_x17, vout_x18, vout_x19, vout_x20, out;
 
   SoA20Vec() {
     out.resize(N);
@@ -477,6 +498,16 @@ struct SoA20Vec {
     initialize_and_generate<T, N>(v1_x8, 8);
     initialize_and_generate<T, N>(v1_x9, 9);
     initialize_and_generate<T, N>(v1_x10, 10);
+    initialize_and_generate<T, N>(v1_x11, 11);
+    initialize_and_generate<T, N>(v1_x12, 12);
+    initialize_and_generate<T, N>(v1_x13, 13);
+    initialize_and_generate<T, N>(v1_x14, 14);
+    initialize_and_generate<T, N>(v1_x15, 15);
+    initialize_and_generate<T, N>(v1_x16, 16);
+    initialize_and_generate<T, N>(v1_x17, 17);
+    initialize_and_generate<T, N>(v1_x18, 18);
+    initialize_and_generate<T, N>(v1_x19, 19);
+    initialize_and_generate<T, N>(v1_x20, 20);
 
     initialize_and_generate<T, N>(v2_x1, 2);
     initialize_and_generate<T, N>(v2_x2, 3);
@@ -488,7 +519,39 @@ struct SoA20Vec {
     initialize_and_generate<T, N>(v2_x8, 9);
     initialize_and_generate<T, N>(v2_x9, 10);
     initialize_and_generate<T, N>(v2_x10, 11);
+    initialize_and_generate<T, N>(v2_x11, 12);
+    initialize_and_generate<T, N>(v2_x12, 13);
+    initialize_and_generate<T, N>(v2_x13, 14);
+    initialize_and_generate<T, N>(v2_x14, 15);
+    initialize_and_generate<T, N>(v2_x15, 16);
+    initialize_and_generate<T, N>(v2_x16, 17);
+    initialize_and_generate<T, N>(v2_x17, 18);
+    initialize_and_generate<T, N>(v2_x18, 19);
+    initialize_and_generate<T, N>(v2_x19, 20);
+    initialize_and_generate<T, N>(v2_x20, 21);
+
+    initialize_and_generate<T, N>(vout_x1, 0);
+    initialize_and_generate<T, N>(vout_x2, 0);
+    initialize_and_generate<T, N>(vout_x3, 0);
+    initialize_and_generate<T, N>(vout_x4, 0);
+    initialize_and_generate<T, N>(vout_x5, 0);
+    initialize_and_generate<T, N>(vout_x6, 0);
+    initialize_and_generate<T, N>(vout_x7, 0);
+    initialize_and_generate<T, N>(vout_x8, 0);
+    initialize_and_generate<T, N>(vout_x9, 0);
+    initialize_and_generate<T, N>(vout_x10, 0);
+    initialize_and_generate<T, N>(vout_x11, 0);
+    initialize_and_generate<T, N>(vout_x12, 0);
+    initialize_and_generate<T, N>(vout_x13, 0);
+    initialize_and_generate<T, N>(vout_x14, 0);
+    initialize_and_generate<T, N>(vout_x15, 0);
+    initialize_and_generate<T, N>(vout_x16, 0);
+    initialize_and_generate<T, N>(vout_x17, 0);
+    initialize_and_generate<T, N>(vout_x18, 0);
+    initialize_and_generate<T, N>(vout_x19, 0);
+    initialize_and_generate<T, N>(vout_x20, 0);
   }
 };
+;
 
 #endif // SOA_H
