@@ -53,7 +53,7 @@ static void BM_MemoryBoundAoS(benchmark::State &state) {
   if (state.range(0)) {
     idx = generateRandomIndices(out.size());
   } else {
-    idx = generateIndicesWithStride(out.size(), 2);
+    idx = generateIndicesWithStride(out.size(), state.range(1));
   }
 
   for (const auto &&_ : state) {
@@ -90,7 +90,7 @@ static void BM_ComputeBoundAoS(benchmark::State &state) {
   if (state.range(0)) {
     idx = generateRandomIndices(out.size());
   } else {
-    idx = generateIndicesWithStride(out.size(), 2);
+    idx = generateIndicesWithStride(out.size(), state.range(1));
   }
 
   auto compute = [](const auto &x1, const auto &x2) {
@@ -141,7 +141,7 @@ static void BM_MemoryBoundSoA(benchmark::State &state) {
   if (state.range(0)) {
     idx = generateRandomIndices(data.vout_x1.size());
   } else {
-    idx = generateIndicesWithStride(data.vout_x1.size(), 2);
+    idx = generateIndicesWithStride(data.vout_x1.size(), state.range(1));
   }
 
   for (const auto &&_ : state) {
