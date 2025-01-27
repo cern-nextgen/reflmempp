@@ -215,8 +215,7 @@ static void BM_ComputeBoundSoA(benchmark::State &state) {
   state.counters["stride"] = state.range(1);
 }
 
-#define BENCHMARK_ARGS                                                                                                 \
-  Unit(benchmark::kMillisecond)->UseManualTime()->ArgsProduct({{0}, benchmark::CreateRange(1, 8, /*multi=*/2)});
+#define BENCHMARK_ARGS Unit(benchmark::kMillisecond)->UseManualTime()->ArgsProduct({{0}, {0, 1, 2, 4, 8}});
 
 #define BENCHMARK_ALL_TYPES(OP, MEMBERS, TYPE, SIZE)                                                                   \
   BENCHMARK_TEMPLATE(BM_##OP##AoS, AoS##MEMBERS##Vec<TYPE, container_size>)->BENCHMARK_ARGS;                           \
