@@ -20,11 +20,11 @@ namespace detail {
 struct no_methods;
 
 /**no_methods
- * @brief Generates array members for each non-static data member in a 
- * given array-of-structures (AoS) type. 
- * 
- * If the member type is a (jagged) vector, it also generates a vector of metadata to 
- * keep track of the length of the vector for each data element. The array members in the 
+ * @brief Generates array members for each non-static data member in a
+ * given array-of-structures (AoS) type.
+ *
+ * If the member type is a (jagged) vector, it also generates a vector of metadata to
+ * keep track of the length of the vector for each data element. The array members in the
  * SoA are declared as `std::span` with the scalar type.
  *
  * @param aos_type The reflection of the array-of-structures (AOS) type.
@@ -78,9 +78,9 @@ consteval void gen_aos_view(std::meta::info aos_type) {
 }
 
 /**
- * @brief Generates a Structure of Arrays (SoA) view from an Array of Structures (AoS) type 
+ * @brief Generates a Structure of Arrays (SoA) view from an Array of Structures (AoS) type
  * converted to a Struct of Arrays (SoA) type.
- * 
+ *
  * @param aos_type A meta-information object representing the AoS type.
  */
 consteval void gen_soa_view(std::meta::info aos_type) {
@@ -104,6 +104,10 @@ public: // internal stuff public for debugging
     friend std::ostream &operator<<(std::ostream &os, const sov_metadata &obj) {
       return os << "{" << obj.offset << ", " << obj.size << "}";
     }
+
+    void print_addr() const {
+      std::cout << "{" << (long long)&offset << ", " << (long long)&size << "}";
+    }
   };
   consteval { detail::gen_soa_members(^T); }
 
@@ -124,10 +128,10 @@ public: // internal stuff public for debugging
 
   /**
    * @brief Computes the sizes and byte sizes of the given data based on the type of the specified member.
-   * 
+   *
    * This function calculates the total size and byte size of the elements in the provided initializer list `data`.
    * The computation is based on the type of the member specified by the template parameter `Member`.
-   * 
+   *
    * @tparam Member The member whose type information is used for size computation.
    * @param data An initializer list of elements of type `T`.
    * @param size A reference to a size_t variable where the total size will be stored.

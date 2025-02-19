@@ -9,12 +9,12 @@
 #include <span>
 #include <type_traits>
 
+#define identifier_of(member) std::meta::name_of(member)
+
 namespace rmpp {
 using namespace std::literals::string_view_literals;
 
 constexpr auto member_prefix = ""sv;
-constexpr auto metadata_suffix = "_md"sv;
-constexpr auto extents_suffix = "_extents"sv;
 
 namespace detail {
 
@@ -29,76 +29,62 @@ consteval bool contains_refl(std::vector<std::meta::info> vec, std::meta::info r
   return false;
 }
 
-/// @brief Injects declarations for a Structure of Arrays (SoA) version of a AoS
-/// member. If the member is a struct, it recursively generates a nested struct
+/// @brief Injects declarations for a Structure of Arrays (SoA) version of the AoS
+/// members. If a member is a struct, it recursively generates a nested struct
 /// containing the span versions of the submembers. The nested struct has the
 /// same name as the original struct with "SoA" appended.
-/// @param member AoS member to generate SoA version for
-/// @param declare if true, declare a SoA version of the nested struct
-/// @param inject if true, inject the declaration into the current scope
-/// @return
-consteval std::meta::info gen_soa_decl(std::meta::info member, bool declare, bool inject) {
-  auto type = type_remove_cvref(type_of(member));
-  auto name = identifier_of(member);
+/// @param S Struct used for AoS
+/// @param inject If true, inject the declarations into the current scope
+/// @return Tokens for declarations of SoA members in the current scope.
+consteval std::meta::info gen_soa_members(std::meta::info S, bool inject) {
+  // List of tokens for SoA member declarations.
+  std::vector<std::meta::info> decl_tokens;
 
-  std::meta::info decl_tokens = ^{};
-  if (type_is_struct(type)) {
-    // Declare a version of the nested struct with span members. Skip
-    // the declaration if the struct has already been declared in the
-    // current scope.
-    if (declare) {
-      // List of already declared structs in the current scope.
-      std::vector<std::meta::info> declared;
+  // List of already declared structs in the current scope.
+  std::vector<std::meta::info> visited_structs;
 
-      // Get span declarations for each member in the nested struct.
-      std::vector<std::meta::info> subdecl_tokens;
-      for (auto submember : nonstatic_data_members_of(type)) {
-        if (contains_refl(declared, type_of(submember))) {
-          subdecl_tokens.push_back(gen_soa_decl(submember, false, false));
-        } else {
-          declared.push_back(type_of(submember));
-          subdecl_tokens.push_back(gen_soa_decl(submember, true, false));
-        }
+  for (auto member : nonstatic_data_members_of(S)) {
+    auto type = type_remove_cvref(type_of(member));
+    auto name = identifier_of(member);
+
+    if (type_is_struct(type)) {
+      // Get tokens for declaring a version of the nested struct
+      // with span members. Skip the declaration if the struct
+      // has already been declared in the current scope.
+      if (!contains_refl(visited_structs, type)) {
+        visited_structs.push_back(type);
+
+        // Build declaration of nested struct.
+        auto subdecl_tokens = gen_soa_members(type, false);
+        decl_tokens.push_back(^{ struct \id(identifier_of(type), "SoA"sv){
+                                \tokens(subdecl_tokens)}; });
       }
 
-      // Concatenate the declarations into a single token string,
-      // separated by semicolons.
-      std::meta::info subdecl_concat = ^{};
-      for (auto tks : subdecl_tokens) {
-        subdecl_concat = ^{ \tokens(subdecl_concat) \tokens(tks) };
-      }
+      decl_tokens.push_back(^{ \id(identifier_of(type), "SoA"sv) \id(name); });
 
-      // Build declaration of nested struct.
-      decl_tokens = ^{ struct \id(identifier_of(type), "SoA"sv){
-                    \tokens(subdecl_concat)}; };
-    }
-
-    // Inject the declaration of the nested struct and an instantiation.
-    // Only inject if this is the top-level struct, otherwise we return
-    // the tokens, so they can be wrapped inside the declaration of the
-    // parent struct
-    if (inject) {
-      // __report_tokens(decl_tokens);
-      queue_injection(decl_tokens);
-
-      // __report_tokens(^{
-      //   \id(identifier_of(type), "SoA"sv) \id(name);
-      // });
-      queue_injection(^{ \id(identifier_of(type), "SoA"sv) \id(name); });
-    } else {
-      decl_tokens = ^{ \tokens(decl_tokens)
-                \id(identifier_of(type), "SoA"sv) \id(name); };
-    }
-  } else { // Scalar data member.
-    decl_tokens = ^{ std::span<typename[:\(type):]> \id(name); };
-
-    if (inject) {
-      queue_injection(decl_tokens);
-      // __report_tokens(decl_tokens);
+    } else { // Basic data member.
+      decl_tokens.push_back(^{ std::span<typename[:\(type):]> \id(name); });
     }
   }
 
-  return decl_tokens;
+  // Concatenate the declarations into a single token string,
+  // separated by semicolons.
+  std::meta::info decl_concat = ^{};
+  for (auto tks : decl_tokens) {
+    decl_concat = ^{ \tokens(decl_concat)
+            \tokens(tks) };
+  }
+
+  // Inject the declarations.
+  // Only inject if this is the top-level struct, otherwise we return
+  // the tokens, so they can be wrapped inside the declaration of the
+  // parent struct.
+  if (inject) {
+    __report_tokens(decl_concat);
+    queue_injection(decl_concat);
+  }
+
+  return decl_concat;
 }
 
 /// @brief Generate initalization of a given SoA member.
@@ -187,9 +173,7 @@ private:
     }
   };
 
-  constexpr inline size_t align_size(size_t size, size_t alignment) const {
-    return ((size + alignment - 1) / alignment) * alignment;
-  }
+  constexpr inline size_t align_size(size_t size) const { return ((size + Alignment - 1) / Alignment) * Alignment; }
 
   /// @brief Compute the size in bytes for a SoA member. If the member is a
   /// struct, the size is computed recursively by summing the sizes of the
@@ -208,7 +192,7 @@ private:
       return struct_size;
     }
 
-    return m_size * sizeof(typename[:type_of(Member):]);
+    return align_size(m_size * sizeof(typename[:type_of(Member):]));
   }
 
   /// @brief Generate a view of a given AoS element.
@@ -229,11 +213,7 @@ private:
   }
 
 public:
-  consteval {
-    for (auto member : nonstatic_data_members_of(^S)) {
-      detail::gen_soa_decl(member, true, true);
-    }
-  }
+  consteval { detail::gen_soa_members(^S, true); }
 
   std::vector<size_t> byte_sizes;
 

@@ -3,7 +3,6 @@
 
 #include <concepts>
 #include <iostream>
-#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -82,11 +81,9 @@ struct get_inner_type {
   using type = T;
 };
 
-// Recursively get the scalar type of a container type.
 template <Container T>
-  requires requires { typename T::value_type; }
 struct get_inner_type<T> {
-  using type = typename get_inner_type<typename T::value_type>::type;
+  using type = get_inner_type<typename T::value_type>::type;
 };
 
 template <class T>
@@ -98,34 +95,22 @@ concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, ge
 ///
 
 #ifdef __cpp_lib_reflection
-
-template <class T>
-concept Reflection = std::same_as<std::meta::info, T>;
-
-consteval bool type_is_reflection(std::meta::info r) {
-  return extract<bool>(std::meta::substitute(^Reflection, {r}));
-}
-
 consteval bool type_is_struct(std::meta::info r) {
-  // static_assert(extract<bool>(std::meta::substitute(^Struct, {r})));
   return extract<bool>(std::meta::substitute(^Struct, {r}));
-
-  // static_assert(extract<bool>(std::meta::substitute(^std::is_class_v, {r})));
-  // return extract<bool>(std::meta::substitute(^std::is_class_v, {r}));
 }
 
-consteval bool type_is_container(std::meta::info r) {
+consteval auto type_is_container(std::meta::info r) -> bool {
   return extract<bool>(std::meta::substitute(^Container, {r}));
 }
 
-consteval bool type_is_eigen(std::meta::info r) {
+consteval auto type_is_eigen(std::meta::info r) -> bool {
   return extract<bool>(std::meta::substitute(^Eigen, {r}));
 }
 
 template <typename T>
 using inner_type = get_inner_type<T>::type;
 
-consteval std::meta::info get_scalar_type(std::meta::info t) {
+consteval auto get_scalar_type(std::meta::info t) -> std::meta::info {
   // if (type_is_container(t)) { return get_scalar_type(template_arguments_of(t)[0]); }
   // return t;
 
@@ -175,11 +160,14 @@ void print_member_addr(const T &v) {
     std::cout << "}";
   } else if constexpr (MDSpan<T>) {
 
+  } else if constexpr (Struct<T>) {
+    v.print_addr();
   } else {
     std::cout << (long long)&v;
   }
 }
 
+#ifdef __cpp_lib_reflection
 void print_aos(auto &aos) {
   std::cout << "soa.size = " << aos.size();
   for (size_t i = 0; i != aos.size(); ++i) {
@@ -198,5 +186,6 @@ void print_aos(auto &aos) {
     };
   }
 }
+#endif
 
 #endif

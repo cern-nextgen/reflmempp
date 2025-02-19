@@ -9,20 +9,68 @@ using namespace std::literals::string_view_literals;
 
 constexpr size_t mDim = 2;
 
-struct Vec {
-  float &x, &y, &z;
-  void MakePlanar() { z = 0; }
+template <typename T>
+struct Cartesian3D {
+  T &fX, &fY, &fZ;
 
-  friend std::ostream &operator<<(std::ostream &os, const Vec &obj) {
-    return os << "{" << obj.x << ", " << obj.y << ", " << obj.z << "}";
+  friend std::ostream &operator<<(std::ostream &os, const Cartesian3D<T> &obj) {
+    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << "}";
+  }
+
+  void print_addr() const {
+    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << "}";
+  }
+
+  void SetY(T yy) { fY = yy; }
+};
+
+template <typename T>
+struct PositionVector3D {
+  Cartesian3D<T> fCoordinates;
+
+  friend std::ostream &operator<<(std::ostream &os, const PositionVector3D<T> &obj) {
+    return os << "{" << obj.fCoordinates << "}";
+  }
+
+  void print_addr() const { fCoordinates.print_addr(); }
+
+  void SetX(T yy) { fCoordinates.SetY(yy); }
+};
+
+template <typename T>
+struct LorentzVector {
+  T &fX, &fY, &fZ, &fT;
+
+  friend std::ostream &operator<<(std::ostream &os, const LorentzVector<T> &obj) {
+    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << ", " << obj.fT << "}";
+  }
+
+  void print_addr() const {
+    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << ", " << (long long)&fT
+              << "}";
+  }
+
+  // std::sqrt currently doesn't work with the experimental EDG reflection compiler?
+  T Pt2() const { return fX * fX + fY * fY; }
+  void SetPxPyPzE(T px, T py, T pz, T e) {
+    fX = px;
+    fY = py;
+    fZ = pz;
+    fT = e;
   }
 };
 
 struct Particle {
-  int &id;
-  Vec pos;
-  void SetIdMember(int v) { id = v; }
+  int &m_particleID;
+  PositionVector3D<double> m_referencePoint;
+  LorentzVector<double> m_momentum;
+
+  void SetId(int id) { m_particleID = id; }
+
+  double pt2() const { return m_momentum.Pt2(); }
 };
+
+//////////////////////////
 
 namespace rmpp {
 template <typename T, size_t Alignment>
@@ -30,77 +78,87 @@ class vector {
 public:
   std::vector<std::byte> storage;
 
-  struct sopos_metadata {
-    size_t offset, size;
-    friend std::ostream &operator<<(std::ostream &os, const sopos_metadata &obj) {
-      return os << "{" << obj.offset << ", " << obj.size << "}";
-    }
-  };
-
   size_t m_size; // Number of elements
 
-  using m_id_type = typeof(Particle::id);
-  using m_pos_type = typeof(Particle::pos.x);
+  // Start SoA members
+  std::span<int> m_particleID;
 
-  // SoA members
-  std::span<m_id_type> id;
-  struct VecSoA {
-    std::span<m_pos_type> x, y, z;
+  struct PositionVector3DSoA {
+    struct Cartesian3DSoA {
+      std::span<double> fX, fY, fZ;
+    };
+    Cartesian3DSoA fCoordinates;
   };
-  VecSoA pos;
+  PositionVector3DSoA m_referencePoint;
 
-  std::vector<size_t> byte_sizes;       // Size of each SoA member including alignment padding
-  std::vector<sopos_metadata> m_pos_md; // Offset and size of each (jagged) vector in m_v;
+  struct LorentzVectorSoA {
+    std::span<double> fX, fY, fZ, fT;
+  };
+  LorentzVectorSoA m_momentum;
+  // End SoA members
 
   using aos_view = T;
-  struct aos_cview {
-    const m_id_type &id;
-    const Vec pos;
-  };
-
-  struct aos_type {
-    struct Vec {
-      m_pos_type x, y, z;
-    };
-    m_id_type id;
-    Vec pos;
-  };
-
-  struct soa_type {
-    std::initializer_list<m_id_type> id;
-    std::initializer_list<m_pos_type> pos_x, pos_y, pos_z;
-  };
 
   // Helper function to compute aligned size
-  constexpr inline size_t align_size(size_t size, size_t alignment) const {
-    return ((size + alignment - 1) / alignment) * alignment;
-  }
+  constexpr inline size_t align_size(size_t size) const { return ((size + Alignment - 1) / Alignment) * Alignment; }
 
 public:
   vector(size_t n) {
     m_size = n;
-    constexpr size_t vec_n_members = 3;
+    size_t total_byte_size = 0;
 
-    size_t total_byte_size = n * sizeof(m_id_type) + n * sizeof(m_pos_type) * vec_n_members;
+    total_byte_size += align_size(sizeof(int[m_size]));        // m_particleID
+    total_byte_size += align_size(sizeof(double[m_size]) * 3); // m_referencePoint
+    total_byte_size += align_size(sizeof(double[m_size]) * 4); // m_momentum
     storage.resize(total_byte_size);
 
-    id = std::span(reinterpret_cast<m_id_type *>(storage.data()), n);
-    pos.x = std::span(reinterpret_cast<m_pos_type *>(storage.data() + n * sizeof(m_id_type)), n);
-    pos.y =
-        std::span(reinterpret_cast<m_pos_type *>(storage.data() + n * sizeof(m_id_type) + sizeof(m_pos_type) * n), n);
-    pos.z = std::span(
-        reinterpret_cast<m_pos_type *>(storage.data() + n * sizeof(m_id_type) + 2 * sizeof(m_pos_type) * n), n);
+    size_t offset = 0;
+    m_particleID = std::span(reinterpret_cast<int *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) int[m_size];
+    offset += sizeof(int[m_size]);
 
+    m_referencePoint.fCoordinates.fX = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_referencePoint.fCoordinates.fY = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_referencePoint.fCoordinates.fZ = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_momentum.fX = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_momentum.fY = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_momentum.fZ = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
+    offset += sizeof(double[m_size]);
+
+    m_momentum.fT = std::span(reinterpret_cast<double *>(storage.data() + offset), m_size);
+    new (storage.data() + offset) double[m_size];
   }
 
   size_t size() const { return m_size; }
 
   aos_view operator[](std::size_t idx) {
-    return aos_view{.id = id[idx], .pos = {pos.x[idx], pos.y[idx], pos.z[idx]}};
-  }
+    return aos_view{
+        .m_particleID = m_particleID[idx],
+        .m_referencePoint = {.fCoordinates = {.fX = m_referencePoint.fCoordinates.fX[idx],
+                                              .fY = m_referencePoint.fCoordinates.fY[idx],
+                                              .fZ = m_referencePoint.fCoordinates.fZ[idx]}},
+        .m_momentum = {.fX = m_momentum.fX[idx],
+                       .fY = m_momentum.fY[idx],
+                       .fZ = m_momentum.fZ[idx],
+                       .fT = m_momentum.fT[idx]},
 
-  aos_cview operator[](std::size_t idx) const {
-    return aos_cview{.id = id[idx], .pos = {pos.x[idx], pos.y[idx], pos.z[idx]}};
+    };
   }
 };
 } // namespace rmpp
@@ -109,29 +167,45 @@ using SoA = rmpp::vector<Particle, 64>;
 
 int main() {
   SoA maos(3);
+
   std::array<int, 3> ids = {0, 1, 2};
-  std::array<float, 3> pos_x = {1, 4, 7};
-  std::array<float, 3> pos_y = {2, 5, 8};
-  std::array<float, 3> pos_z = {3, 6, 9};
-  std::copy(ids.begin(), ids.end(), maos.id.begin());
-  std::copy(pos_x.begin(), pos_x.end(), maos.pos.x.begin());
-  std::copy(pos_y.begin(), pos_y.end(), maos.pos.y.begin());
-  std::copy(pos_z.begin(), pos_z.end(), maos.pos.z.begin());
+  std::array<float, 3> ref_x = {3, 6, 9};
+  std::array<float, 3> ref_y = {4, 7, 10};
+  std::array<float, 3> ref_z = {5, 8, 11};
+  std::array<float, 3> momentum_x = {12, 16, 20};
+  std::array<float, 3> momentum_y = {13, 17, 21};
+  std::array<float, 3> momentum_z = {14, 18, 22};
+  std::array<float, 3> momentum_t = {15, 19, 23};
+
+  std::copy(ids.begin(), ids.end(), maos.m_particleID.begin());
+  std::copy(ref_x.begin(), ref_x.end(), maos.m_referencePoint.fCoordinates.fX.begin());
+  std::copy(ref_y.begin(), ref_y.end(), maos.m_referencePoint.fCoordinates.fY.begin());
+  std::copy(ref_z.begin(), ref_z.end(), maos.m_referencePoint.fCoordinates.fZ.begin());
+  std::copy(momentum_x.begin(), momentum_x.end(), maos.m_momentum.fX.begin());
+  std::copy(momentum_y.begin(), momentum_y.end(), maos.m_momentum.fY.begin());
+  std::copy(momentum_z.begin(), momentum_z.end(), maos.m_momentum.fZ.begin());
+  std::copy(momentum_t.begin(), momentum_t.end(), maos.m_momentum.fT.begin());
 
   std::cout << "---- Before ---\nmaos.size = " << maos.size() << "\n";
   for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "maos[" << i << "] = ( Id:" << maos[i].id;
-    std::cout << "}, Vec: {" << maos[i].pos;
-    std::cout << "}\n";
+    std::cout << "maos[" << i << "] = (\n";
+    std::cout << "\tm_particleID: " << maos[i].m_particleID << "\n";
+    std::cout << "\tm_referencePoint: " << maos[i].m_referencePoint << "\n";
+    std::cout << "\tm_momentum: " << maos[i].m_momentum << "\n";
+    std::cout << ")\n";
   }
 
-  maos[0].SetIdMember(42);
-  maos[0].pos.MakePlanar();
+  maos[0].SetId(9);
+  maos[1].m_referencePoint.SetX(9999);
+  maos[1].m_referencePoint.fCoordinates.fZ = 8888;
+  maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
 
-  std::cout << "---- After ----\n";
+  std::cout << "\n---- After ----\n";
   for (size_t i = 0; i != maos.size(); ++i) {
-    std::cout << "maos[" << i << "] = ( Id:" << maos[i].id;
-    std::cout << "}, Vec: {" << maos[i].pos;
-    std::cout << "}\n";
+    std::cout << "maos[" << i << "] = (\n";
+    std::cout << "\tm_particleID: " << maos[i].m_particleID << "\n";
+    std::cout << "\tm_referencePoint: " << maos[i].m_referencePoint << "\n";
+    std::cout << "\tm_momentum: " << maos[i].m_momentum << "\n";
+    std::cout << ")\n";
   }
 }

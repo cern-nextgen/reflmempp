@@ -2,9 +2,7 @@
 // injection. Each array in the SoA is allocated in a contiguous storage
 // container.
 
-#define __cpp_lib_reflection 20240815
-
-#include "rmpp.h"
+#include "rmpp_ref.h"
 #include <cassert>
 #include <cmath>
 #include <experimental/meta>
@@ -21,6 +19,10 @@ struct Cartesian3D {
     return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << "}";
   }
 
+  void print_addr() const {
+    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << "}";
+  }
+
   void SetY(T yy) { fY = yy; }
 };
 
@@ -32,7 +34,9 @@ struct PositionVector3D {
     return os << "{" << obj.fCoordinates << "}";
   }
 
-  void SetY(T yy) { fCoordinates.SetY(yy); }
+  void print_addr() const { fCoordinates.print_addr(); }
+
+  void SetX(T yy) { fCoordinates.SetY(yy); }
 };
 
 template <typename T>
@@ -43,7 +47,11 @@ struct LorentzVector {
     return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << ", " << obj.fT << "}";
   }
 
-  // std::sqrt currently doesn't work with the experimental EDG reflection compiler?
+  void print_addr() const {
+    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << ", " << (long long)&fT
+              << "}";
+  }
+
   T Pt2() const { return fX * fX + fY * fY; }
   void SetPxPyPzE(T px, T py, T pz, T e) {
     fX = px;
@@ -90,13 +98,13 @@ int main() {
   print_aos(maos);
 
   maos[0].SetId(9);
-  maos[1].m_referencePoint.SetY(9999);
+  maos[1].m_referencePoint.SetX(9999);
   maos[1].m_referencePoint.fCoordinates.fZ = 8888;
   maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
 
   std::cout << "------------ After -----------\n";
   print_aos(maos);
-  std::cout << "maos[2].pt2() = " << maos[2].pt2();
+  std::cout << "maos[2].pt2() = " << maos[2].pt2() << "\n";
 
   return 0;
 }
