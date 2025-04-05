@@ -15,14 +15,6 @@ template <typename T>
 struct Cartesian3D {
   T &fX, &fY, &fZ;
 
-  friend std::ostream &operator<<(std::ostream &os, const Cartesian3D<T> &obj) {
-    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << "}";
-  }
-
-  void print_addr() const {
-    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << "}";
-  }
-
   void SetY(T yy) { fY = yy; }
 };
 
@@ -30,27 +22,12 @@ template <typename T>
 struct PositionVector3D {
   Cartesian3D<T> fCoordinates;
 
-  friend std::ostream &operator<<(std::ostream &os, const PositionVector3D<T> &obj) {
-    return os << "{" << obj.fCoordinates << "}";
-  }
-
-  void print_addr() const { fCoordinates.print_addr(); }
-
-  void SetX(T yy) { fCoordinates.SetY(yy); }
+  void SetY(T yy) { fCoordinates.SetY(yy); }
 };
 
 template <typename T>
 struct LorentzVector {
   T &fX, &fY, &fZ, &fT;
-
-  friend std::ostream &operator<<(std::ostream &os, const LorentzVector<T> &obj) {
-    return os << "{" << obj.fX << ", " << obj.fY << ", " << obj.fZ << ", " << obj.fT << "}";
-  }
-
-  void print_addr() const {
-    std::cout << "{" << (long long)&fX << ", " << (long long)&fY << ", " << (long long)&fZ << ", " << (long long)&fT
-              << "}";
-  }
 
   T Pt2() const { return fX * fX + fY * fY; }
   void SetPxPyPzE(T px, T py, T pz, T e) {
@@ -98,9 +75,19 @@ int main() {
   print_aos(maos);
 
   maos[0].SetId(9);
-  maos[1].m_referencePoint.SetX(9999);
+  assert(maos.m_particleID[0] == 9);
+
+  maos[1].m_referencePoint.SetY(9999);
+  assert(maos.m_referencePoint.fCoordinates.fY[1] == 9999);
+
   maos[1].m_referencePoint.fCoordinates.fZ = 8888;
+  assert(maos.m_referencePoint.fCoordinates.fZ[1] == 8888);
+
   maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
+  assert(maos.m_momentum.fX[2] == 0);
+  assert(maos.m_momentum.fY[2] == 0);
+  assert(maos.m_momentum.fZ[2] == 0);
+  assert(maos.m_momentum.fT[2] == 0);
 
   std::cout << "------------ After -----------\n";
   print_aos(maos);

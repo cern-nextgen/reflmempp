@@ -9,8 +9,6 @@
 #include <span>
 #include <type_traits>
 
-#define identifier_of(member) std::meta::name_of(member)
-
 namespace rmpp {
 using namespace std::literals::string_view_literals;
 
@@ -56,22 +54,22 @@ consteval std::meta::info gen_soa_members(std::meta::info S, bool inject) {
 
         // Build declaration of nested struct.
         auto subdecl_tokens = gen_soa_members(type, false);
-        decl_tokens.push_back(^{ struct \id(identifier_of(type), "SoA"sv){
+        decl_tokens.push_back(^^{ struct \id(identifier_of(type), "SoA"sv){
                                 \tokens(subdecl_tokens)}; });
       }
 
-      decl_tokens.push_back(^{ \id(identifier_of(type), "SoA"sv) \id(name); });
+      decl_tokens.push_back(^^{ \id(identifier_of(type), "SoA"sv) \id(name); });
 
     } else { // Basic data member.
-      decl_tokens.push_back(^{ std::span<typename[:\(type):]> \id(name); });
+      decl_tokens.push_back(^^{ std::span<typename[:\(type):]> \id(name); });
     }
   }
 
   // Concatenate the declarations into a single token string,
   // separated by semicolons.
-  std::meta::info decl_concat = ^{};
+  std::meta::info decl_concat = ^^{};
   for (auto tks : decl_tokens) {
-    decl_concat = ^{ \tokens(decl_concat)
+    decl_concat = ^^{ \tokens(decl_concat)
             \tokens(tks) };
   }
 
@@ -103,20 +101,30 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
     // the current member to the id_tokens to access the members of the
     // nested struct.
     for (auto submember : nonstatic_data_members_of(type)) {
-      auto offset = gen_soa_init(submember, ^{
+      auto offset = gen_soa_init(submember, ^^{
                 \tokens(id_tokens).\id(identifier_of(submember))}, offset_tokens);
-      offset_tokens = ^{ \tokens(offset_tokens) + \tokens(offset) };
+      offset_tokens = ^^{ \tokens(offset_tokens) + \tokens(offset) };
     }
   } else { // Scalar members
-    // Tokens for comuting the offset into the storage for the current
-    // member.
-    offset_tokens = ^{ \tokens(offset_tokens) + m_size * sizeof(typename[: \(type):]) };
+    // __report_tokens(offset_tokens);
 
     // Inject span initialization for the current member.
-    queue_injection(^{
+    queue_injection(^^{
       \tokens(id_tokens) =
           std::span(reinterpret_cast<typename[: \(type):] *>(storage.data() + \tokens(offset_tokens)), m_size);
     });
+
+    auto member_size = ^^{ align_size(m_size * sizeof(typename[: \(type):])) };
+    auto next_offset_tokens = ^^{ \tokens(offset_tokens) + \tokens(member_size) };
+    queue_injection(^^{
+      for (size_t i = \tokens(offset_tokens); i < \tokens(next_offset_tokens); i += sizeof(typename[: \(type):])) {
+        std::construct_at(reinterpret_cast<typename[: \(type):] *>(storage.data() + i), typename[: \(type):]());
+      }
+    });
+
+    // Tokens for comuting the offset into the storage for the next
+    // member.
+    offset_tokens = next_offset_tokens;
   }
 
   return offset_tokens;
@@ -140,19 +148,18 @@ consteval std::meta::info assign_aos_view_member(std::meta::info member, std::me
     // nested struct.
     std::meta::list_builder substruct_assign{};
     for (auto submember : nonstatic_data_members_of(type)) {
-      auto submember_id = ^{ \tokens(id_tokens).\id(identifier_of(submember)) };
+      auto submember_id = ^^{ \tokens(id_tokens).\id(identifier_of(submember)) };
       substruct_assign += assign_aos_view_member(submember, idx, submember_id);
     }
 
     // Nested struct members. e.g., .vecs = { .a = a[idx], .b = b[idx] }
-    return ^{
-      {
-              \tokens(substruct_assign) }
+    return ^^{
+      { \tokens(substruct_assign) }
     };
   }
 
   // Scalar members. e.g., .x = x[idx]
-  return ^{ \tokens(id_tokens)[\id(identifier_of(idx))] };
+  return ^^{ \tokens(id_tokens)[\id(identifier_of(idx))] };
 }
 
 } // namespace views
@@ -160,10 +167,10 @@ consteval std::meta::info assign_aos_view_member(std::meta::info member, std::me
 
 template <typename S, size_t Alignment>
 class vector {
-  static_assert(type_is_struct(^S));
+  static_assert(type_is_struct(^^S));
 
 private:
-  std::vector<std::byte> storage;
+  alignas(Alignment) std::vector<std::byte> storage;
   size_t m_size;
 
   struct sov_metadata {
@@ -203,17 +210,17 @@ private:
   ViewType generate_view(const size_t idx) const {
     consteval {
       std::meta::list_builder member_data_tokens{};
-      for (auto member : nonstatic_data_members_of(^S)) {
-        member_data_tokens += detail::views::assign_aos_view_member(member, ^idx, ^{ \id(identifier_of(member))});
+      for (auto member : nonstatic_data_members_of(^^S)) {
+        member_data_tokens += detail::views::assign_aos_view_member(member, ^^idx, ^^{ \id(identifier_of(member))});
       }
 
       // __report_tokens(member_data_tokens);
-      queue_injection(^{ return ViewType{\tokens(member_data_tokens)}; });
+      queue_injection(^^{ return ViewType{\tokens(member_data_tokens)}; });
     }
   }
 
 public:
-  consteval { detail::gen_soa_members(^S, true); }
+  consteval { detail::gen_soa_members(^^S, true); }
 
   std::vector<size_t> byte_sizes;
 
@@ -227,16 +234,16 @@ public:
 
     // Compute the size of the storage container.
     size_t total_byte_size = 0;
-    [:expand(nonstatic_data_members_of(^S)):] >> [&]<auto member> { total_byte_size += compute_size<member>(); };
+    [:expand(nonstatic_data_members_of(^^S)):] >> [&]<auto member> { total_byte_size += compute_size<member>(); };
     std::cout << "storage of " << total_byte_size << " bytes in total\n\n ";
     storage.resize(total_byte_size);
 
     // Initialze the spans for each member in the SoA to offsets into
     // the storage container.
     consteval {
-      std::meta::info offset_tokens = ^{ 0 };
-      for (auto member : nonstatic_data_members_of(^S)) {
-        offset_tokens = detail::gen_soa_init(member, ^{ \id(identifier_of(member))}, offset_tokens);
+      std::meta::info offset_tokens = ^^{ 0 };
+      for (auto member : nonstatic_data_members_of(^^S)) {
+        offset_tokens = detail::gen_soa_init(member, ^^{ \id(identifier_of(member))}, offset_tokens);
       }
 
       // __report_tokens(offset_tokens);

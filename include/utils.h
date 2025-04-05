@@ -131,19 +131,17 @@ void print_member(const T &v) {
       if (i != 0) std::cout << ", ";
       print_member(v[i]);
     }
-    std::cout << "}";
-  } else if constexpr (MDSpan<T>) { // FIXME:
-    //   std::cout << "{";
-    //   for (size_t i = 0; i < v.extent(0); i++) {
-    //     if (i != 0) std::cout << ", ";
-    //     std::cout << "{";
-    //     for (size_t j = 0; j < v.extent(1); j++) {
-    //       if (j != 0) std::cout << ", ";
-    //       std::cout << v[i][j];
-    //     }
-    //     std::cout << "}";
-    //   }
-    //   std::cout << "}";
+  } else if constexpr (Struct<T>) {
+    std::cout << identifier_of(^^T) << "{ ";
+
+    int i = 0;
+    [:expand(nonstatic_data_members_of(^^T)):] >> [&]<auto e> {
+      if (i != 0) std::cout << ", ";
+      print_member(v.[:e:]);
+      i++;
+    };
+
+    std::cout << " }";
   } else {
     std::cout << v;
   }
@@ -158,14 +156,22 @@ void print_member_addr(const T &v) {
       print_member_addr(v[i]);
     }
     std::cout << "}";
-  } else if constexpr (MDSpan<T>) {
-
   } else if constexpr (Struct<T>) {
-    v.print_addr();
+    std::cout << "{ ";
+
+    int i = 0;
+    [:expand(nonstatic_data_members_of(^^T)):] >> [&]<auto e> {
+      if (i != 0) std::cout << ", ";
+      print_member_addr(v.[:e:]);
+      i++;
+    };
+
+    std::cout << " }";
   } else {
     std::cout << (long long)&v;
   }
 }
+
 
 #ifdef __cpp_lib_reflection
 void print_aos(auto &aos) {
