@@ -135,7 +135,7 @@ This table summarizes what features each version supports
 | aos2soa                | https://godbolt.org/z/G4eTKW71P |
 | aos2soa_contiguous     | https://godbolt.org/z/MzK5Te5z5 |
 | aos2soa_containers     | https://godbolt.org/z/3bEKhr5r3 |
-| with_methods           | https://godbolt.org/z/4EfqE81Y4 |
+| with_methods           | https://godbolt.org/z/GYM8WdGsE |
 
 - `manual`: contains the manually unrolled version of each example. These can be compiled with a standard C++ compiler using CMake:
 ```

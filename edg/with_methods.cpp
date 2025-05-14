@@ -2,6 +2,8 @@
 // injection. Each array in the SoA is allocated in a contiguous storage
 // container.
 
+#define __cpp_lib_reflection 20240815
+
 #include "rmpp_ref.h"
 #include <cassert>
 #include <cmath>
@@ -95,7 +97,7 @@ int main() {
   std::copy(momentum_t.begin(), momentum_t.end(), maos.m_momentum.fT.begin());
 
   std::cout << "----------- Before ------------\n";
-  print_aos(maos);
+  print_soa_as_aos(maos);
 
   maos[0].SetId(9);
   maos[1].m_referencePoint.SetX(9999);
@@ -103,7 +105,7 @@ int main() {
   maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
 
   std::cout << "------------ After -----------\n";
-  print_aos(maos);
+  print_soa_as_aos(maos);
   std::cout << "maos[2].pt2() = " << maos[2].pt2() << "\n";
 
   return 0;

@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <iostream>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -30,11 +31,6 @@ concept Struct = std::is_class_v<T> && !std::is_union_v<T>;
 template <class T>
 concept Span = std::same_as<std::decay_t<T>, std::span<typename std::decay_t<T>::value_type>>;
 
-template <class T>
-concept MDSpan = std::same_as<std::decay_t<T>,
-                              mdspan<typename std::decay_t<T>::value_type, typename std::decay_t<T>::extents_type,
-                                     typename std::decay_t<T>::layout_type, typename std::decay_t<T>::accessor_type>>;
-
 // https://stackoverflow.com/a/60491447
 template <class ContainerType>
 concept Container = Span<ContainerType> || requires(ContainerType a, const ContainerType b) {
@@ -44,7 +40,8 @@ concept Container = Span<ContainerType> || requires(ContainerType a, const Conta
   requires std::same_as<typename ContainerType::reference, typename ContainerType::value_type &>;
   requires std::same_as<typename ContainerType::const_reference, const typename ContainerType::value_type &>;
   // requires std::forward_iterator<typename ContainerType::iterator>;
-  // requires std::forward_iterator<typename ContainerType::const_iterator>;
+  // requires std::forward_iterator<typename
+  // ContainerType::const_iterator>;
   requires std::signed_integral<typename ContainerType::difference_type>;
   requires std::same_as<typename ContainerType::difference_type,
                         typename std::iterator_traits<typename ContainerType::iterator>::difference_type>;
@@ -61,6 +58,9 @@ concept Container = Span<ContainerType> || requires(ContainerType a, const Conta
   { a.empty() } -> std::same_as<bool>;
 };
 
+template <typename T>
+concept NestedContainer = Container<T> && Container<typename T::value_type>;
+
 ///
 // Eigen Matrices
 ///
@@ -71,9 +71,16 @@ using EigenMatrix = std::array<std::array<T, D>, D>;
 
 template <typename>
 struct get_array_size;
+
 template <typename T, size_t S>
 struct get_array_size<std::array<T, S>> {
   constexpr static size_t size = S;
+};
+
+// Multiple size of dimensions for nested arrays.
+template <typename T, size_t N, size_t M>
+struct get_array_size<std::array<std::array<T, M>, N>> {
+  constexpr static size_t size = N * get_array_size<std::array<T,M>>::size;
 };
 
 template <typename T>
@@ -81,47 +88,70 @@ struct get_inner_type {
   using type = T;
 };
 
+// Recursively get the scalar type of a container type.
 template <Container T>
+  requires requires { typename T::value_type; }
 struct get_inner_type<T> {
-  using type = get_inner_type<typename T::value_type>::type;
+  using type = typename get_inner_type<typename T::value_type>::type;
 };
 
 template <class T>
 concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, get_array_size<T>::size>>;
-// requires std::same_as<T, EigenMatrix<typename[:get_scalar_type(type_decay(^T)):], get_array_size<T>::size>>;
+// requires std::same_as<T,
+// EigenMatrix<typename[:get_scalar_type(type_decay(^^T)):],
+// get_array_size<T>::size>>;
 
 ///
 // Methods taking std::meta::info
 ///
 
 #ifdef __cpp_lib_reflection
+template <class T>
+concept Reflection = std::same_as<std::meta::info, T>;
+
+consteval bool is_reflection(std::meta::info r) {
+  return extract<bool>(std::meta::substitute(^^Reflection, {r}));
+}
+
 consteval bool type_is_struct(std::meta::info r) {
-  return extract<bool>(std::meta::substitute(^Struct, {r}));
+  return extract<bool>(std::meta::substitute(^^Struct, {r}));
 }
 
-consteval auto type_is_container(std::meta::info r) -> bool {
-  return extract<bool>(std::meta::substitute(^Container, {r}));
+consteval bool type_is_container(std::meta::info r) {
+  return extract<bool>(std::meta::substitute(^^Container, {r}));
 }
 
-consteval auto type_is_eigen(std::meta::info r) -> bool {
-  return extract<bool>(std::meta::substitute(^Eigen, {r}));
+consteval bool type_is_nested_container(std::meta::info r) {
+  return extract<bool>(std::meta::substitute(^^NestedContainer, {r}));
+}
+
+consteval bool type_is_eigen(std::meta::info r) {
+  return extract<bool>(std::meta::substitute(^^Eigen, {r}));
 }
 
 template <typename T>
 using inner_type = get_inner_type<T>::type;
 
-consteval auto get_scalar_type(std::meta::info t) -> std::meta::info {
-  // if (type_is_container(t)) { return get_scalar_type(template_arguments_of(t)[0]); }
-  // return t;
+consteval std::meta::info get_scalar_type(std::meta::info t) {
+  // if (type_is_container(t)) { return
+  // get_scalar_type(template_arguments_of(t)[0]); } return t;
 
-  // Can i do this with just without inner_type and just get_inner_type instead?
-  return substitute(^inner_type, {t});
+  // Can i do this with just without inner_type and just get_inner_type
+  // instead?
+  return substitute(^^inner_type, {t});
 }
-#endif
 
 ///
 // Print utilities
 ///
+
+auto indent_string(int indent) {
+  std::string r;
+  for (int i = 0; i < indent; i++) {
+    r += std::string(" ");
+  }
+  return r;
+}
 
 template <typename T>
 void print_member(const T &v) {
@@ -131,19 +161,17 @@ void print_member(const T &v) {
       if (i != 0) std::cout << ", ";
       print_member(v[i]);
     }
-    std::cout << "}";
-  } else if constexpr (MDSpan<T>) { // FIXME:
-    //   std::cout << "{";
-    //   for (size_t i = 0; i < v.extent(0); i++) {
-    //     if (i != 0) std::cout << ", ";
-    //     std::cout << "{";
-    //     for (size_t j = 0; j < v.extent(1); j++) {
-    //       if (j != 0) std::cout << ", ";
-    //       std::cout << v[i][j];
-    //     }
-    //     std::cout << "}";
-    //   }
-    //   std::cout << "}";
+  } else if constexpr (Struct<T>) {
+    std::cout << identifier_of(^^T) << "{ ";
+
+    int i = 0;
+    [:expand(nonstatic_data_members_of(^^T,  std::meta::access_context::current())):] >> [&]<auto e> {
+      if (i != 0) std::cout << ", ";
+      print_member(v.[:e:]);
+      i++;
+    };
+
+    std::cout << " }";
   } else {
     std::cout << v;
   }
@@ -158,28 +186,34 @@ void print_member_addr(const T &v) {
       print_member_addr(v[i]);
     }
     std::cout << "}";
-  } else if constexpr (MDSpan<T>) {
-
   } else if constexpr (Struct<T>) {
-    v.print_addr();
+    std::cout << identifier_of(^^T) << "{ ";
+
+    int i = 0;
+    [:expand(nonstatic_data_members_of(^^T, std::meta::access_context::current())):] >> [&]<auto e> {
+      if (i != 0) std::cout << ", ";
+      print_member_addr(v.[:e:]);
+      i++;
+    };
+
+    std::cout << " }";
   } else {
     std::cout << (long long)&v;
   }
 }
 
-#ifdef __cpp_lib_reflection
-void print_aos(auto &aos) {
+void print_soa_as_aos(auto &aos) {
   std::cout << "soa.size = " << aos.size();
   for (size_t i = 0; i != aos.size(); ++i) {
     std::cout << "\naos[" << i << "] = (\n";
 
-    [:expand(nonstatic_data_members_of(^decltype(aos[i]))):] >> [&]<auto e> {
+    [:expand(nonstatic_data_members_of(^^decltype(aos[i]), std::meta::access_context::current())):] >> [&]<auto e> {
       std::cout << "\t" << identifier_of(e) << ": ";
       print_member(aos[i].[:e:]);
       std::cout << "\n";
     };
 
-    [:expand(nonstatic_data_members_of(^decltype(aos[i]))):] >> [&]<auto e> {
+    [:expand(nonstatic_data_members_of(^^decltype(aos[i]), std::meta::access_context::current())):] >> [&]<auto e> {
       std::cout << "\t" << identifier_of(e) << " ADDR: ";
       print_member_addr(aos[i].[:e:]);
       std::cout << "\n";
