@@ -142,7 +142,10 @@ int main() {
   std::cout << "maos.size = " << maos.size() << "\n";
   for (size_t i = 0; i != maos.size(); ++i) {
     std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", v: {";
-    print_member(maos[i].v);
+    for (size_t j = 0; j < maos[i].v.size(); j++) {
+      if (j != 0) std::cout << ", ";
+      std::cout << maos[i].v[j];
+    }
     std::cout << "}, m: {";
     auto md = maos[i].m;
     for (size_t j = 0; j < md.extent(0); j++) {
@@ -159,7 +162,10 @@ int main() {
 
   for (size_t i = 0; i != maos.size(); ++i) {
     std::cout << "maos[" << i << "] = ( x:" << (long long)&maos[i].x << ", v: {";
-    print_member_addr(maos[i].v);
+    for (size_t j = 0; j < maos[i].v.size(); j++) {
+      if (j != 0) std::cout << ", ";
+      std::cout << &maos[i].v[j];
+    }
     std::cout << "}, m: {";
     auto md = maos[i].m;
     for (size_t j = 0; j < md.extent(0); j++) {
@@ -174,11 +180,11 @@ int main() {
     std::cout << "} )\n";
   }
 
-  print_member(maos._x);
+  for (size_t i = 0; i < maos.size(); i++) { std::cout << maos._x[i] << " "; }
   std::cout << "\n";
-  print_member(maos._v);
+  for (size_t i = 0; i < maos.size(); i++) { std::cout << maos._v[i] << " "; }
   std::cout << "\n";
-  print_member(maos._m);
+  for (size_t i = 0; i < maos.size(); i++) { std::cout << maos._m[i] << " "; }
 
   std::cout << "\n";
 }
