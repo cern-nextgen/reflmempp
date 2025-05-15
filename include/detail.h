@@ -109,6 +109,9 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
       \tokens(id_tokens) =
           std::span(reinterpret_cast<typename[: \(type):] *>(storage.data() + \tokens(offset_tokens)), m_size);
     });
+
+    // Placement new
+    queue_injection(^^{ new (storage.data() + \tokens(offset_tokens)) typename[: \(type):][m_size]; });
   }
 
   return offset_tokens;
@@ -150,6 +153,6 @@ consteval std::meta::info assign_aos_view_member(std::meta::info member, std::me
 
 } // namespace views
 } // namespace detail
-}
+} // namespace rmpp
 
 #endif
