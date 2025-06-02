@@ -172,7 +172,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
     __report_and_inject(^^{ \id(soa_member, "_offsets"sv).resize(m_capacity + 1); });
 
     //   Tokens for computing the offset into the storage for the next member.
-    offset_tokens = ^^{ \tokens(offset_tokens) + \tokens(id_tokens).size_bytes() };
+    offset_tokens = ^^{ \tokens(offset_tokens) + align_size(\tokens(id_tokens).size_bytes()) };
   } else if (type_is_struct(type)) {
     // Recursively initialize nested struct members. Add the identifier of
     // the current member to the id_tokens to access the members of the
@@ -189,7 +189,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
     });
 
     // Tokens for computing the offset into the storage for the next member.
-    offset_tokens = ^^{ \tokens(offset_tokens) + \tokens(id_tokens).size_bytes() };
+    offset_tokens = ^^{ \tokens(offset_tokens) + align_size(\tokens(id_tokens).size_bytes()) };
   }
 
   return offset_tokens;
