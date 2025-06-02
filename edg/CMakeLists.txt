@@ -6,9 +6,6 @@ message(STATUS "Compiling EDG versions with ${EDG_CXX} (EDG_CXX)")
 
 set(EDG_SOURCES
     aos2soa
-    aos2soa_contiguous
-    aos2soa_containers
-    with_methods
 )
 
 foreach(src ${EDG_SOURCES})
