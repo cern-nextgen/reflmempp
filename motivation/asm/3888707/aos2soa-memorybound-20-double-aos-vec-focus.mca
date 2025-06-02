@@ -1,0 +1,155 @@
+Iterations:        100
+Instructions:      2400
+Total Cycles:      474
+Total uOps:        2700
+
+Dispatch Width:    6
+uOps Per Cycle:    5.70
+IPC:               5.06
+Block RThroughput: 4.5
+
+
+Instruction Info:
+[1]: #uOps
+[2]: Latency
+[3]: RThroughput
+[4]: MayLoad
+[5]: MayStore
+[6]: HasSideEffects (U)
+
+[1]    [2]    [3]    [4]    [5]    [6]    Instructions:
+ 1      5     0.50    *                   movq	-160(%rbp), %rsi
+ 1      5     0.50    *                   movq	-136(%rbp), %rdx
+ 1      1     0.25                        movq	%rax, %r13
+ 1      5     0.50    *                   movq	-120(%rbp), %rcx
+ 1      1     0.25                        movq	%rsi, %rax
+ 1      1     0.25                        cmpq	%rsi, %r15
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                        nopl	(%rax,%rax)
+ 1      5     0.50    *                   vmovsd	8(%rdx), %xmm1
+ 1      5     0.50    *                   vmovsd	(%rdx), %xmm0
+ 1      1     0.25                        addq	$160, %rax
+ 1      1     0.25                        addq	$160, %rdx
+ 1      1     0.25                        addq	$8, %rcx
+ 2      9     0.50    *                   vsubsd	-152(%rax), %xmm1, %xmm1
+ 2      9     0.50    *                   vsubsd	-160(%rax), %xmm0, %xmm0
+ 1      4     0.50                        vmulsd	%xmm1, %xmm1, %xmm1
+ 1      4     0.50                        vfmadd132sd	%xmm0, %xmm1, %xmm0
+ 2      1     1.00           *            vmovsd	%xmm0, -8(%rcx)
+ 1      1     0.25                        cmpq	%rax, %r15
+
+
+Dynamic Dispatch Stall Cycles:
+RAT     - Register unavailable:                      0
+RCU     - Retire tokens unavailable:                 0
+SCHEDQ  - Scheduler full:                            0
+LQ      - Load queue full:                           0
+SQ      - Store queue full:                          0
+GROUP   - Static restrictions on the dispatch group: 0
+USH     - Uncategorised Structural Hazard:           0
+
+
+Dispatch Logic - number of cycles where we saw N micro opcodes dispatched:
+[# dispatched], [# cycles]
+ 0,              23  (4.9%)
+ 1,              1  (0.2%)
+ 5,              1  (0.2%)
+ 6,              449  (94.7%)
+
+
+Schedulers - number of cycles where we saw N micro opcodes issued:
+[# issued], [# cycles]
+ 0,          15  (3.2%)
+ 1,          3  (0.6%)
+ 2,          28  (5.9%)
+ 3,          53  (11.2%)
+ 4,          87  (18.4%)
+ 5,          59  (12.4%)
+ 6,          48  (10.1%)
+ 7,          56  (11.8%)
+ 8,          39  (8.2%)
+ 9,          53  (11.2%)
+ 10,          2  (0.4%)
+ 11,          27  (5.7%)
+ 12,          1  (0.2%)
+ 13,          2  (0.4%)
+ 15,          1  (0.2%)
+
+Scheduler's queue usage:
+[1] Resource name.
+[2] Average number of used buffer entries.
+[3] Maximum number of used buffer entries.
+[4] Total number of buffer entries.
+
+ [1]            [2]        [3]        [4]
+SKLPortAny       23         33         60
+
+
+Retire Control Unit - number of cycles where we saw N instructions retired:
+[# retired], [# cycles]
+ 0,           256  (54.0%)
+ 1,           113  (23.8%)
+ 2,           2  (0.4%)
+ 3,           1  (0.2%)
+ 5,           3  (0.6%)
+ 22,          12  (2.5%)
+ 23,          87  (18.4%)
+
+Total ROB Entries:                224
+Max Used ROB Entries:             155  ( 69.2% )
+Average Used ROB Entries per cy:  124  ( 55.4% )
+
+
+Register File statistics:
+Total number of mappings created:    1900
+Max number of mappings used:         108
+
+
+Resources:
+[0]   - SKLDivider
+[1]   - SKLFPDivider
+[2]   - SKLPort0
+[3]   - SKLPort1
+[4]   - SKLPort2
+[5]   - SKLPort3
+[6]   - SKLPort4
+[7]   - SKLPort5
+[8]   - SKLPort6
+[9]   - SKLPort7
+
+
+Resource pressure per iteration:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    
+ -      -     2.91   2.99   3.51   3.51   1.00   2.41   2.69   0.98   
+
+Resource pressure by instruction:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    Instructions:
+ -      -      -      -     0.42   0.58    -      -      -      -     movq	-160(%rbp), %rsi
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	-136(%rbp), %rdx
+ -      -     0.02   0.07    -      -      -     0.36   0.55    -     movq	%rax, %r13
+ -      -      -      -     0.51   0.49    -      -      -      -     movq	-120(%rbp), %rcx
+ -      -     0.04   0.01    -      -      -     0.63   0.32    -     movq	%rsi, %rax
+ -      -     0.12   0.10    -      -      -     0.31   0.47    -     cmpq	%rsi, %r15
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     nopl	(%rax,%rax)
+ -      -      -      -     0.54   0.46    -      -      -      -     vmovsd	8(%rdx), %xmm1
+ -      -      -      -     0.46   0.54    -      -      -      -     vmovsd	(%rdx), %xmm0
+ -      -     0.54   0.02    -      -      -     0.35   0.09    -     addq	$160, %rax
+ -      -     0.06   0.49    -      -      -     0.09   0.36    -     addq	$160, %rdx
+ -      -     0.11   0.20    -      -      -     0.14   0.55    -     addq	$8, %rcx
+ -      -     0.58   0.42   0.55   0.45    -      -      -      -     vsubsd	-152(%rax), %xmm1, %xmm1
+ -      -     0.21   0.79   0.52   0.48    -      -      -      -     vsubsd	-160(%rax), %xmm0, %xmm0
+ -      -     0.40   0.60    -      -      -      -      -      -     vmulsd	%xmm1, %xmm1, %xmm1
+ -      -     0.74   0.26    -      -      -      -      -      -     vfmadd132sd	%xmm0, %xmm1, %xmm0
+ -      -      -      -     0.01   0.01   1.00    -      -     0.98   vmovsd	%xmm0, -8(%rcx)
+ -      -     0.09   0.03    -      -      -     0.53   0.35    -     cmpq	%rax, %r15

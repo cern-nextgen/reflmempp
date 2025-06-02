@@ -1,0 +1,418 @@
+Iterations:        100
+Instructions:      15200
+Total Cycles:      13617
+Total uOps:        16200
+
+Dispatch Width:    6
+uOps Per Cycle:    1.19
+IPC:               1.12
+Block RThroughput: 56.0
+
+
+Instruction Info:
+[1]: #uOps
+[2]: Latency
+[3]: RThroughput
+[4]: MayLoad
+[5]: MayStore
+[6]: HasSideEffects (U)
+
+[1]    [2]    [3]    [4]    [5]    [6]    Instructions:
+ 1      1     0.25                        movq	%rax, %rdx
+ 1      0     0.17                        xorl	%eax, %eax
+ 1      1     0.25                        cmpq	%rbx, %r13
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 3      2     0.75                        xchgw	%ax, %ax
+ 1      5     0.50    *                   movsd	(%rbp,%rax,2), %xmm0
+ 1      5     0.50    *                   movsd	(%rbx,%rax,2), %xmm3
+ 1      5     0.50    *                   movsd	8(%rbp,%rax,2), %xmm1
+ 1      5     0.50    *                   movsd	8(%rbx,%rax,2), %xmm4
+ 1      1     0.33                        movapd	%xmm0, %xmm12
+ 1      1     0.33                        movapd	%xmm0, %xmm5
+ 1      1     0.33                        movapd	%xmm3, %xmm15
+ 1      4     0.50                        subsd	%xmm3, %xmm12
+ 1      1     0.33                        movapd	%xmm1, %xmm2
+ 1      1     0.33                        movapd	%xmm4, %xmm13
+ 1      4     0.50                        subsd	%xmm3, %xmm2
+ 1      4     0.50                        addsd	%xmm0, %xmm13
+ 1      1     0.33                        movapd	%xmm4, %xmm14
+ 1      4     0.50                        mulsd	%xmm1, %xmm14
+ 1      1     0.33                        movapd	%xmm4, %xmm8
+ 1      4     0.50                        subsd	%xmm4, %xmm5
+ 1      1     0.33                        movapd	%xmm12, %xmm9
+ 1      4     0.50                        addsd	%xmm1, %xmm8
+ 1      4     0.50                        addsd	%xmm1, %xmm15
+ 1      4     0.50                        mulsd	%xmm12, %xmm9
+ 1      1     0.33                        movapd	%xmm2, %xmm6
+ 1      1     0.33                        movapd	%xmm1, %xmm11
+ 1      4     0.50                        mulsd	%xmm13, %xmm6
+ 2      1     1.00           *            movsd	%xmm5, (%rsp)
+ 1      1     0.33                        movapd	%xmm0, %xmm5
+ 1      1     0.33                        movapd	%xmm3, %xmm10
+ 1      14    4.00                        divsd	%xmm3, %xmm5
+ 1      1     0.33                        movapd	%xmm13, %xmm7
+ 1      4     0.50                        subsd	%xmm4, %xmm11
+ 2      1     1.00           *            movsd	%xmm14, 40(%rsp)
+ 1      1     0.33                        movapd	%xmm1, %xmm14
+ 1      4     0.50                        addsd	%xmm0, %xmm10
+ 1      4     0.50                        mulsd	%xmm15, %xmm7
+ 2      1     1.00           *            movsd	%xmm9, 32(%rsp)
+ 1      1     0.33                        movapd	%xmm8, %xmm9
+ 1      1     0.33                        movapd	%xmm3, %xmm8
+ 1      4     0.50                        mulsd	%xmm1, %xmm8
+ 2      1     1.00           *            movsd	%xmm6, 16(%rsp)
+ 1      1     0.33                        movapd	%xmm3, %xmm6
+ 1      4     0.50                        mulsd	%xmm0, %xmm6
+ 2      1     1.00           *            movsd	%xmm10, 8(%rsp)
+ 1      5     0.50    *                   movsd	32(%rsp), %xmm10
+ 2      1     1.00           *            movsd	%xmm7, 24(%rsp)
+ 1      1     0.33                        movapd	%xmm4, %xmm7
+ 1      4     0.50                        mulsd	%xmm0, %xmm7
+ 1      14    4.00                        divsd	%xmm3, %xmm1
+ 1      5     0.50    *                   movsd	(%rsp), %xmm3
+ 1      4     0.50                        mulsd	%xmm2, %xmm3
+ 1      4     0.50                        addsd	%xmm3, %xmm3
+ 1      14    4.00                        divsd	%xmm4, %xmm14
+ 1      14    4.00                        divsd	%xmm4, %xmm0
+ 1      5     0.50    *                   movsd	16(%rsp), %xmm4
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      5     0.50    *                   movsd	24(%rsp), %xmm4
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      1     0.33                        movapd	%xmm11, %xmm4
+ 1      4     0.50                        mulsd	%xmm11, %xmm4
+ 1      4     0.50                        addsd	%xmm10, %xmm3
+ 1      4     0.50                        addsd	%xmm3, %xmm4
+ 1      5     0.50    *                   movsd	8(%rsp), %xmm3
+ 1      4     0.50                        mulsd	%xmm3, %xmm3
+ 1      14    4.00                        divsd	%xmm12, %xmm12
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      1     0.33                        movapd	%xmm9, %xmm4
+ 1      4     0.50                        mulsd	%xmm9, %xmm4
+ 1      4     0.50                        addsd	%xmm4, %xmm3
+ 1      5     0.50    *                   movsd	(%rsp), %xmm4
+ 1      4     0.50                        addsd	%xmm10, %xmm3
+ 1      1     0.33                        movapd	%xmm2, %xmm10
+ 2      19    4.00    *                   divsd	(%rsp), %xmm10
+ 1      14    4.00                        divsd	%xmm2, %xmm4
+ 1      14    4.00                        divsd	%xmm11, %xmm11
+ 1      4     0.50                        subsd	%xmm4, %xmm3
+ 1      1     0.33                        movapd	%xmm13, %xmm4
+ 1      4     0.50                        subsd	%xmm10, %xmm3
+ 1      5     0.50    *                   movsd	8(%rsp), %xmm10
+ 1      14    4.00                        divsd	%xmm2, %xmm4
+ 1      14    4.00                        divsd	%xmm10, %xmm10
+ 1      4     0.50                        subsd	%xmm4, %xmm3
+ 1      1     0.33                        movapd	%xmm2, %xmm4
+ 1      14    4.00                        divsd	%xmm13, %xmm4
+ 1      14    4.00                        divsd	%xmm9, %xmm9
+ 1      4     0.50                        subsd	%xmm4, %xmm3
+ 1      1     0.33                        movapd	%xmm13, %xmm4
+ 1      1     0.33                        movapd	%xmm3, %xmm2
+ 1      1     0.33                        movapd	%xmm15, %xmm3
+ 1      14    4.00                        divsd	%xmm15, %xmm4
+ 1      14    4.00                        divsd	%xmm13, %xmm3
+ 1      4     0.50                        subsd	%xmm4, %xmm2
+ 1      4     0.50                        subsd	%xmm3, %xmm2
+ 1      4     0.50                        subsd	%xmm12, %xmm2
+ 1      4     0.50                        subsd	%xmm11, %xmm2
+ 1      4     0.50                        subsd	%xmm10, %xmm2
+ 1      4     0.50                        subsd	%xmm9, %xmm2
+ 1      4     0.50                        subsd	%xmm6, %xmm2
+ 1      4     0.50                        subsd	%xmm6, %xmm2
+ 1      4     0.50                        addsd	%xmm7, %xmm2
+ 1      4     0.50                        subsd	%xmm8, %xmm2
+ 1      4     0.50                        addsd	%xmm8, %xmm2
+ 1      4     0.50                        subsd	%xmm7, %xmm2
+ 1      4     0.50                        addsd	%xmm7, %xmm2
+ 1      4     0.50                        subsd	%xmm8, %xmm2
+ 1      4     0.50                        addsd	%xmm8, %xmm2
+ 1      4     0.50                        subsd	%xmm7, %xmm2
+ 1      4     0.50                        addsd	%xmm7, %xmm2
+ 1      4     0.50                        subsd	%xmm8, %xmm2
+ 1      4     0.50                        addsd	%xmm8, %xmm2
+ 1      4     0.50                        subsd	%xmm7, %xmm2
+ 1      5     0.50    *                   movsd	40(%rsp), %xmm7
+ 1      4     0.50                        addsd	%xmm6, %xmm2
+ 1      4     0.50                        subsd	%xmm6, %xmm2
+ 1      4     0.50                        addsd	%xmm7, %xmm2
+ 1      4     0.50                        subsd	%xmm7, %xmm2
+ 1      4     0.50                        addsd	%xmm6, %xmm2
+ 1      4     0.50                        subsd	%xmm6, %xmm2
+ 1      4     0.50                        addsd	%xmm14, %xmm2
+ 1      4     0.50                        addsd	%xmm14, %xmm2
+ 1      4     0.50                        subsd	%xmm5, %xmm2
+ 1      4     0.50                        addsd	%xmm5, %xmm2
+ 1      4     0.50                        subsd	%xmm0, %xmm2
+ 1      4     0.50                        addsd	%xmm1, %xmm2
+ 1      4     0.50                        subsd	%xmm1, %xmm2
+ 1      4     0.50                        addsd	%xmm0, %xmm2
+ 1      4     0.50                        subsd	%xmm0, %xmm2
+ 1      4     0.50                        addsd	%xmm1, %xmm2
+ 1      4     0.50                        subsd	%xmm1, %xmm2
+ 1      4     0.50                        addsd	%xmm0, %xmm2
+ 1      4     0.50                        subsd	%xmm0, %xmm2
+ 1      4     0.50                        addsd	%xmm1, %xmm2
+ 1      4     0.50                        subsd	%xmm1, %xmm2
+ 1      4     0.50                        addsd	%xmm2, %xmm0
+ 1      4     0.50                        subsd	%xmm5, %xmm0
+ 1      4     0.50                        addsd	%xmm5, %xmm0
+ 1      4     0.50                        subsd	%xmm14, %xmm0
+ 1      4     0.50                        addsd	%xmm14, %xmm0
+ 1      4     0.50                        subsd	%xmm5, %xmm0
+ 1      4     0.50                        addsd	%xmm5, %xmm0
+ 1      4     0.50                        subsd	%xmm14, %xmm0
+ 1      4     0.50                        addsd	%xmm14, %xmm0
+ 2      1     1.00           *            movsd	%xmm0, (%r12,%rax)
+ 1      1     0.25                        addq	$8, %rax
+ 1      1     0.25                        cmpq	%rax, %r15
+ 1      1     1.00           *            movq	%rdx, (%rsp)
+
+
+Dynamic Dispatch Stall Cycles:
+RAT     - Register unavailable:                      0
+RCU     - Retire tokens unavailable:                 1700  (12.5%)
+SCHEDQ  - Scheduler full:                            11244  (82.6%)
+LQ      - Load queue full:                           0
+SQ      - Store queue full:                          0
+GROUP   - Static restrictions on the dispatch group: 0
+USH     - Uncategorised Structural Hazard:           0
+
+
+Dispatch Logic - number of cycles where we saw N micro opcodes dispatched:
+[# dispatched], [# cycles]
+ 0,              5167  (37.9%)
+ 1,              5307  (39.0%)
+ 2,              1060  (7.8%)
+ 3,              778  (5.7%)
+ 4,              547  (4.0%)
+ 5,              297  (2.2%)
+ 6,              461  (3.4%)
+
+
+Schedulers - number of cycles where we saw N micro opcodes issued:
+[# issued], [# cycles]
+ 0,          4454  (32.7%)
+ 1,          5732  (42.1%)
+ 2,          1178  (8.7%)
+ 3,          1498  (11.0%)
+ 4,          258  (1.9%)
+ 5,          396  (2.9%)
+ 6,          101  (0.7%)
+
+Scheduler's queue usage:
+[1] Resource name.
+[2] Average number of used buffer entries.
+[3] Maximum number of used buffer entries.
+[4] Total number of buffer entries.
+
+ [1]            [2]        [3]        [4]
+SKLPortAny       57         60         60
+
+
+Retire Control Unit - number of cycles where we saw N instructions retired:
+[# retired], [# cycles]
+ 0,           9585  (70.4%)
+ 1,           3167  (23.3%)
+ 2,           154  (1.1%)
+ 3,           205  (1.5%)
+ 4,           204  (1.5%)
+ 5,           2  (0.0%)
+ 6,           101  (0.7%)
+ 19,          1  (0.0%)
+ 31,          99  (0.7%)
+ 50,          1  (0.0%)
+ 54,          1  (0.0%)
+ 56,          2  (0.0%)
+ 57,          2  (0.0%)
+ 58,          43  (0.3%)
+ 75,          45  (0.3%)
+ 76,          2  (0.0%)
+ 77,          1  (0.0%)
+ 79,          1  (0.0%)
+ 83,          1  (0.0%)
+
+Total ROB Entries:                224
+Max Used ROB Entries:             224  ( 100.0% )
+Average Used ROB Entries per cy:  171  ( 76.3% )
+
+
+Register File statistics:
+Total number of mappings created:    14200
+Max number of mappings used:         193
+
+
+Resources:
+[0]   - SKLDivider
+[1]   - SKLFPDivider
+[2]   - SKLPort0
+[3]   - SKLPort1
+[4]   - SKLPort2
+[5]   - SKLPort3
+[6]   - SKLPort4
+[7]   - SKLPort5
+[8]   - SKLPort6
+[9]   - SKLPort7
+
+
+Resource pressure per iteration:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    
+ -     56.00  52.25  51.36  8.02   8.04   8.00   23.34  3.05   4.94   
+
+Resource pressure by instruction:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    Instructions:
+ -      -      -      -      -      -      -     0.99   0.01    -     movq	%rax, %rdx
+ -      -      -      -      -      -      -      -      -      -     xorl	%eax, %eax
+ -      -     0.03   0.01    -      -      -     0.01   0.95    -     cmpq	%rbx, %r13
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -     0.03   0.03    -      -      -     2.85   0.09    -     xchgw	%ax, %ax
+ -      -      -      -     0.12   0.88    -      -      -      -     movsd	(%rbp,%rax,2), %xmm0
+ -      -      -      -     0.88   0.12    -      -      -      -     movsd	(%rbx,%rax,2), %xmm3
+ -      -      -      -     0.12   0.88    -      -      -      -     movsd	8(%rbp,%rax,2), %xmm1
+ -      -      -      -     0.88   0.12    -      -      -      -     movsd	8(%rbx,%rax,2), %xmm4
+ -      -     0.01    -      -      -      -     0.99    -      -     movapd	%xmm0, %xmm12
+ -      -     0.02   0.96    -      -      -     0.02    -      -     movapd	%xmm0, %xmm5
+ -      -     0.94   0.02    -      -      -     0.04    -      -     movapd	%xmm3, %xmm15
+ -      -     0.02   0.98    -      -      -      -      -      -     subsd	%xmm3, %xmm12
+ -      -     0.04    -      -      -      -     0.96    -      -     movapd	%xmm1, %xmm2
+ -      -     0.50   0.02    -      -      -     0.48    -      -     movapd	%xmm4, %xmm13
+ -      -     0.11   0.89    -      -      -      -      -      -     subsd	%xmm3, %xmm2
+ -      -     0.92   0.08    -      -      -      -      -      -     addsd	%xmm0, %xmm13
+ -      -     0.02   0.02    -      -      -     0.96    -      -     movapd	%xmm4, %xmm14
+ -      -     0.08   0.92    -      -      -      -      -      -     mulsd	%xmm1, %xmm14
+ -      -     0.01   0.44    -      -      -     0.55    -      -     movapd	%xmm4, %xmm8
+ -      -     0.92   0.08    -      -      -      -      -      -     subsd	%xmm4, %xmm5
+ -      -     0.01    -      -      -      -     0.99    -      -     movapd	%xmm12, %xmm9
+ -      -     0.07   0.93    -      -      -      -      -      -     addsd	%xmm1, %xmm8
+ -      -     0.51   0.49    -      -      -      -      -      -     addsd	%xmm1, %xmm15
+ -      -     0.51   0.49    -      -      -      -      -      -     mulsd	%xmm12, %xmm9
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm2, %xmm6
+ -      -     0.01    -      -      -      -     0.99    -      -     movapd	%xmm1, %xmm11
+ -      -     0.53   0.47    -      -      -      -      -      -     mulsd	%xmm13, %xmm6
+ -      -      -      -      -     0.99   1.00    -      -     0.01   movsd	%xmm5, (%rsp)
+ -      -     0.47   0.04    -      -      -     0.49    -      -     movapd	%xmm0, %xmm5
+ -      -     0.04   0.44    -      -      -     0.52    -      -     movapd	%xmm3, %xmm10
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm3, %xmm5
+ -      -      -     0.06    -      -      -     0.94    -      -     movapd	%xmm13, %xmm7
+ -      -     0.01   0.99    -      -      -      -      -      -     subsd	%xmm4, %xmm11
+ -      -      -      -     0.99    -     1.00    -      -     0.01   movsd	%xmm14, 40(%rsp)
+ -      -     0.02    -      -      -      -     0.98    -      -     movapd	%xmm1, %xmm14
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm0, %xmm10
+ -      -     0.97   0.03    -      -      -      -      -      -     mulsd	%xmm15, %xmm7
+ -      -      -      -     0.01    -     1.00    -      -     0.99   movsd	%xmm9, 32(%rsp)
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm8, %xmm9
+ -      -     0.01   0.89    -      -      -     0.10    -      -     movapd	%xmm3, %xmm8
+ -      -     0.54   0.46    -      -      -      -      -      -     mulsd	%xmm1, %xmm8
+ -      -      -      -      -     0.06   1.00    -      -     0.94   movsd	%xmm6, 16(%rsp)
+ -      -     0.46   0.05    -      -      -     0.49    -      -     movapd	%xmm3, %xmm6
+ -      -     0.04   0.96    -      -      -      -      -      -     mulsd	%xmm0, %xmm6
+ -      -      -      -     0.53   0.44   1.00    -      -     0.03   movsd	%xmm10, 8(%rsp)
+ -      -      -      -     0.10   0.90    -      -      -      -     movsd	32(%rsp), %xmm10
+ -      -      -      -     0.01   0.01   1.00    -      -     0.98   movsd	%xmm7, 24(%rsp)
+ -      -     0.03    -      -      -      -     0.97    -      -     movapd	%xmm4, %xmm7
+ -      -     0.47   0.53    -      -      -      -      -      -     mulsd	%xmm0, %xmm7
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm3, %xmm1
+ -      -      -      -     0.93   0.07    -      -      -      -     movsd	(%rsp), %xmm3
+ -      -     0.09   0.91    -      -      -      -      -      -     mulsd	%xmm2, %xmm3
+ -      -     0.10   0.90    -      -      -      -      -      -     addsd	%xmm3, %xmm3
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm4, %xmm14
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm4, %xmm0
+ -      -      -      -     0.07   0.93    -      -      -      -     movsd	16(%rsp), %xmm4
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -     0.51   0.49    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -      -      -     0.50   0.50    -      -      -      -     movsd	24(%rsp), %xmm4
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm11, %xmm4
+ -      -     0.91   0.09    -      -      -      -      -      -     mulsd	%xmm11, %xmm4
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm10, %xmm3
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm3, %xmm4
+ -      -      -      -     0.87   0.13    -      -      -      -     movsd	8(%rsp), %xmm3
+ -      -     0.46   0.54    -      -      -      -      -      -     mulsd	%xmm3, %xmm3
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm12, %xmm12
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm9, %xmm4
+ -      -     0.04   0.96    -      -      -      -      -      -     mulsd	%xmm9, %xmm4
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm4, %xmm3
+ -      -      -      -     0.13   0.87    -      -      -      -     movsd	(%rsp), %xmm4
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm10, %xmm3
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm2, %xmm10
+ -     4.00   1.00    -     0.11   0.89    -      -      -      -     divsd	(%rsp), %xmm10
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm2, %xmm4
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm11, %xmm11
+ -      -     0.50   0.50    -      -      -      -      -      -     subsd	%xmm4, %xmm3
+ -      -     0.44    -      -      -      -     0.56    -      -     movapd	%xmm13, %xmm4
+ -      -     0.08   0.92    -      -      -      -      -      -     subsd	%xmm10, %xmm3
+ -      -      -      -     0.89   0.11    -      -      -      -     movsd	8(%rsp), %xmm10
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm2, %xmm4
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm10, %xmm10
+ -      -     0.09   0.91    -      -      -      -      -      -     subsd	%xmm4, %xmm3
+ -      -     0.02   0.04    -      -      -     0.94    -      -     movapd	%xmm2, %xmm4
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm13, %xmm4
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm9, %xmm9
+ -      -     0.09   0.91    -      -      -      -      -      -     subsd	%xmm4, %xmm3
+ -      -     0.47   0.01    -      -      -     0.52    -      -     movapd	%xmm13, %xmm4
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm3, %xmm2
+ -      -      -      -      -      -      -     1.00    -      -     movapd	%xmm15, %xmm3
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm15, %xmm4
+ -     4.00   1.00    -      -      -      -      -      -      -     divsd	%xmm13, %xmm3
+ -      -     0.52   0.48    -      -      -      -      -      -     subsd	%xmm4, %xmm2
+ -      -     0.52   0.48    -      -      -      -      -      -     subsd	%xmm3, %xmm2
+ -      -     0.52   0.48    -      -      -      -      -      -     subsd	%xmm12, %xmm2
+ -      -     0.52   0.48    -      -      -      -      -      -     subsd	%xmm11, %xmm2
+ -      -     0.51   0.49    -      -      -      -      -      -     subsd	%xmm10, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     subsd	%xmm9, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     subsd	%xmm6, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     subsd	%xmm6, %xmm2
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm7, %xmm2
+ -      -     0.06   0.94    -      -      -      -      -      -     subsd	%xmm8, %xmm2
+ -      -     0.05   0.95    -      -      -      -      -      -     addsd	%xmm8, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     subsd	%xmm7, %xmm2
+ -      -     0.03   0.97    -      -      -      -      -      -     addsd	%xmm7, %xmm2
+ -      -     0.04   0.96    -      -      -      -      -      -     subsd	%xmm8, %xmm2
+ -      -     0.02   0.98    -      -      -      -      -      -     addsd	%xmm8, %xmm2
+ -      -     0.46   0.54    -      -      -      -      -      -     subsd	%xmm7, %xmm2
+ -      -     0.45   0.55    -      -      -      -      -      -     addsd	%xmm7, %xmm2
+ -      -     0.46   0.54    -      -      -      -      -      -     subsd	%xmm8, %xmm2
+ -      -     0.45   0.55    -      -      -      -      -      -     addsd	%xmm8, %xmm2
+ -      -     0.48   0.52    -      -      -      -      -      -     subsd	%xmm7, %xmm2
+ -      -      -      -     0.87   0.13    -      -      -      -     movsd	40(%rsp), %xmm7
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm6, %xmm2
+ -      -     0.50   0.50    -      -      -      -      -      -     subsd	%xmm6, %xmm2
+ -      -     0.07   0.93    -      -      -      -      -      -     addsd	%xmm7, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     subsd	%xmm7, %xmm2
+ -      -     0.48   0.52    -      -      -      -      -      -     addsd	%xmm6, %xmm2
+ -      -     0.93   0.07    -      -      -      -      -      -     subsd	%xmm6, %xmm2
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm14, %xmm2
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm14, %xmm2
+ -      -     0.91   0.09    -      -      -      -      -      -     subsd	%xmm5, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm5, %xmm2
+ -      -     0.92   0.08    -      -      -      -      -      -     subsd	%xmm0, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm1, %xmm2
+ -      -     0.92   0.08    -      -      -      -      -      -     subsd	%xmm1, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm0, %xmm2
+ -      -     0.91   0.09    -      -      -      -      -      -     subsd	%xmm0, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm1, %xmm2
+ -      -     0.91   0.09    -      -      -      -      -      -     subsd	%xmm1, %xmm2
+ -      -     0.49   0.51    -      -      -      -      -      -     addsd	%xmm0, %xmm2
+ -      -     0.90   0.10    -      -      -      -      -      -     subsd	%xmm0, %xmm2
+ -      -     0.92   0.08    -      -      -      -      -      -     addsd	%xmm1, %xmm2
+ -      -     0.90   0.10    -      -      -      -      -      -     subsd	%xmm1, %xmm2
+ -      -     0.93   0.07    -      -      -      -      -      -     addsd	%xmm2, %xmm0
+ -      -     0.47   0.53    -      -      -      -      -      -     subsd	%xmm5, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm5, %xmm0
+ -      -     0.04   0.96    -      -      -      -      -      -     subsd	%xmm14, %xmm0
+ -      -     0.06   0.94    -      -      -      -      -      -     addsd	%xmm14, %xmm0
+ -      -     0.04   0.96    -      -      -      -      -      -     subsd	%xmm5, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     addsd	%xmm5, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     subsd	%xmm14, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     addsd	%xmm14, %xmm0
+ -      -      -      -      -     0.01   1.00    -      -     0.99   movsd	%xmm0, (%r12,%rax)
+ -      -      -      -      -      -      -      -     1.00    -     addq	$8, %rax
+ -      -      -      -      -      -      -      -     1.00    -     cmpq	%rax, %r15
+ -      -      -      -     0.01    -     1.00    -      -     0.99   movq	%rdx, (%rsp)

@@ -1,0 +1,20 @@
+	call   <_ZNSt6chrono3_V212steady_clock3nowEv@plt>
+	mov    -0x2cf0(%rbp),%rcx
+	mov    -0x2d00(%rbp),%rdx
+	mov    -0x2d08(%rbp),%rsi
+	mov    -0x2cd8(%rbp),%rdi
+	mov    %rax,%r12
+	data16 cs nopw 0x0(%rax,%rax,1)
+	nopl   0x0(%rax,%rax,1)
+	mov    (%r15),%rax
+	add    $0x8,%r15
+	vmovsd (%r14,%rax,8),%xmm1
+	vmovsd 0x0(%r13,%rax,8),%xmm0
+	vsubsd (%rsi,%rax,8),%xmm1,%xmm1
+	vsubsd (%rdx,%rax,8),%xmm0,%xmm0
+	vmulsd %xmm1,%xmm1,%xmm1
+	vfmadd132sd %xmm0,%xmm1,%xmm0
+	vmovsd %xmm0,(%rdi,%rax,8)
+	cmp    %r15,%rcx
+	jne    <_Z17BM_MemoryBoundSoAI8SoA20VecIdLm10000000EEEvRN9benchmark5StateE+0xe40>
+	call   <_ZNSt6chrono3_V212steady_clock3nowEv@plt>

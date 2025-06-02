@@ -21,3 +21,12 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
+
+.gdb_history
+dump*
+out
+test.cpp
+
+*.sqlite
+*.nsys-rep
+*.ti

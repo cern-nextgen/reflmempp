@@ -1,0 +1,307 @@
+Iterations:        100
+Instructions:      10100
+Total Cycles:      11236
+Total uOps:        10300
+
+Dispatch Width:    6
+uOps Per Cycle:    0.92
+IPC:               0.90
+Block RThroughput: 56.0
+
+
+Instruction Info:
+[1]: #uOps
+[2]: Latency
+[3]: RThroughput
+[4]: MayLoad
+[5]: MayStore
+[6]: HasSideEffects (U)
+
+[1]    [2]    [3]    [4]    [5]    [6]    Instructions:
+ 1      5     0.50    *                   movq	-11528(%rbp), %r8
+ 1      5     0.50    *                   movq	-11536(%rbp), %rcx
+ 1      1     1.00           *            movq	%rax, -11512(%rbp)
+ 1      5     0.50    *                   movq	-11560(%rbp), %rdx
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      5     0.50    *                   movq	(%rcx), %rax
+ 1      1     0.25                        addq	$8, %rcx
+ 1      5     0.50    *                   vmovsd	(%r12,%rax,8), %xmm3
+ 1      5     0.50    *                   vmovsd	(%r15,%rax,8), %xmm5
+ 1      5     0.50    *                   vmovsd	(%r13,%rax,8), %xmm6
+ 1      5     0.50    *                   vmovsd	(%r14,%rax,8), %xmm4
+ 1      4     0.50                        vaddsd	%xmm5, %xmm3, %xmm8
+ 1      4     0.50                        vaddsd	%xmm6, %xmm3, %xmm2
+ 1      4     0.50                        vsubsd	%xmm5, %xmm4, %xmm11
+ 1      4     0.50                        vsubsd	%xmm6, %xmm3, %xmm12
+ 1      4     0.50                        vaddsd	%xmm5, %xmm4, %xmm10
+ 1      4     0.50                        vsubsd	%xmm6, %xmm4, %xmm9
+ 1      4     0.50                        vaddsd	%xmm4, %xmm6, %xmm7
+ 1      4     0.50                        vmulsd	%xmm2, %xmm11, %xmm0
+ 1      4     0.50                        vmulsd	%xmm11, %xmm12, %xmm1
+ 1      14    4.00                        vdivsd	%xmm11, %xmm12, %xmm13
+ 2      9     0.50    *                   vfmadd132sd	351621(%rip), %xmm0, %xmm1
+ 1      4     0.50                        vaddsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm5, %xmm3, %xmm1
+ 1      4     0.50                        vfmadd231sd	%xmm10, %xmm2, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm10, %xmm2, %xmm0
+ 1      14    4.00                        vdivsd	%xmm12, %xmm11, %xmm12
+ 1      4     0.50                        vfmadd231sd	%xmm1, %xmm1, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm9, %xmm9, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm8, %xmm8, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm7, %xmm7, %xmm0
+ 1      14    4.00                        vdivsd	%xmm9, %xmm9, %xmm9
+ 1      4     0.50                        vfmadd231sd	%xmm1, %xmm1, %xmm0
+ 1      4     0.50                        vsubsd	%xmm13, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm12, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm11, %xmm2, %xmm12
+ 1      14    4.00                        vdivsd	%xmm2, %xmm11, %xmm11
+ 1      4     0.50                        vsubsd	%xmm12, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm1, %xmm1, %xmm1
+ 1      4     0.50                        vsubsd	%xmm11, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm10, %xmm2, %xmm11
+ 1      14    4.00                        vdivsd	%xmm2, %xmm10, %xmm2
+ 1      4     0.50                        vsubsd	%xmm11, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm8, %xmm8, %xmm8
+ 1      4     0.50                        vsubsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm9, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm7, %xmm7, %xmm7
+ 1      4     0.50                        vsubsd	%xmm8, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm6, %xmm4, %xmm1
+ 1      4     0.50                        vsubsd	%xmm7, %xmm0, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      14    4.00                        vdivsd	%xmm5, %xmm3, %xmm2
+ 1      4     0.50                        vfmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm5, %xmm4, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      4     0.50                        vfmadd231sd	%xmm4, %xmm6, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm4, %xmm6, %xmm0
+ 1      14    4.00                        vdivsd	%xmm5, %xmm4, %xmm4
+ 1      4     0.50                        vfmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      4     0.50                        vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ 1      4     0.50                        vaddsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm1, %xmm0, %xmm0
+ 1      14    4.00                        vdivsd	%xmm6, %xmm3, %xmm3
+ 1      4     0.50                        vsubsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm4, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm3, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm2, %xmm0, %xmm0
+ 1      4     0.50                        vsubsd	%xmm1, %xmm0, %xmm0
+ 1      4     0.50                        vaddsd	%xmm1, %xmm0, %xmm0
+ 2      1     1.00           *            vmovsd	%xmm0, (%rdx,%rax,8)
+ 1      1     0.25                        cmpq	%r8, %rcx
+
+
+Dynamic Dispatch Stall Cycles:
+RAT     - Register unavailable:                      0
+RCU     - Retire tokens unavailable:                 0
+SCHEDQ  - Scheduler full:                            11052  (98.4%)
+LQ      - Load queue full:                           0
+SQ      - Store queue full:                          0
+GROUP   - Static restrictions on the dispatch group: 0
+USH     - Uncategorised Structural Hazard:           0
+
+
+Dispatch Logic - number of cycles where we saw N micro opcodes dispatched:
+[# dispatched], [# cycles]
+ 0,              4684  (41.7%)
+ 1,              3346  (29.8%)
+ 2,              2799  (24.9%)
+ 3,              295  (2.6%)
+ 4,              100  (0.9%)
+ 5,              1  (0.0%)
+ 6,              11  (0.1%)
+
+
+Schedulers - number of cycles where we saw N micro opcodes issued:
+[# issued], [# cycles]
+ 0,          4632  (41.2%)
+ 1,          3403  (30.3%)
+ 2,          2803  (24.9%)
+ 3,          302  (2.7%)
+ 4,          95  (0.8%)
+ 5,          1  (0.0%)
+
+Scheduler's queue usage:
+[1] Resource name.
+[2] Average number of used buffer entries.
+[3] Maximum number of used buffer entries.
+[4] Total number of buffer entries.
+
+ [1]            [2]        [3]        [4]
+SKLPortAny       59         60         60
+
+
+Retire Control Unit - number of cycles where we saw N instructions retired:
+[# retired], [# cycles]
+ 0,           8249  (73.4%)
+ 1,           2573  (22.9%)
+ 2,           211  (1.9%)
+ 3,           4  (0.0%)
+ 4,           100  (0.9%)
+ 61,          1  (0.0%)
+ 66,          1  (0.0%)
+ 67,          47  (0.4%)
+ 68,          48  (0.4%)
+ 71,          1  (0.0%)
+ 82,          1  (0.0%)
+
+Total ROB Entries:                224
+Max Used ROB Entries:             202  ( 90.2% )
+Average Used ROB Entries per cy:  133  ( 59.4% )
+
+
+Register File statistics:
+Total number of mappings created:    9800
+Max number of mappings used:         192
+
+
+Resources:
+[0]   - SKLDivider
+[1]   - SKLFPDivider
+[2]   - SKLPort0
+[3]   - SKLPort1
+[4]   - SKLPort2
+[5]   - SKLPort3
+[6]   - SKLPort4
+[7]   - SKLPort5
+[8]   - SKLPort6
+[9]   - SKLPort7
+
+
+Resource pressure per iteration:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    
+ -     56.00  44.98  42.02  4.51   4.51   2.00   1.00   1.00   1.98   
+
+Resource pressure by instruction:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    Instructions:
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	-11528(%rbp), %r8
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	-11536(%rbp), %rcx
+ -      -      -      -     0.01    -     1.00    -      -     0.99   movq	%rax, -11512(%rbp)
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	-11560(%rbp), %rdx
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	(%rcx), %rax
+ -      -      -      -      -      -      -      -     1.00    -     addq	$8, %rcx
+ -      -      -      -     0.50   0.50    -      -      -      -     vmovsd	(%r12,%rax,8), %xmm3
+ -      -      -      -     0.50   0.50    -      -      -      -     vmovsd	(%r15,%rax,8), %xmm5
+ -      -      -      -     0.50   0.50    -      -      -      -     vmovsd	(%r13,%rax,8), %xmm6
+ -      -      -      -     0.50   0.50    -      -      -      -     vmovsd	(%r14,%rax,8), %xmm4
+ -      -     0.47   0.53    -      -      -      -      -      -     vaddsd	%xmm5, %xmm3, %xmm8
+ -      -     0.95   0.05    -      -      -      -      -      -     vaddsd	%xmm6, %xmm3, %xmm2
+ -      -     0.06   0.94    -      -      -      -      -      -     vsubsd	%xmm5, %xmm4, %xmm11
+ -      -     0.98   0.02    -      -      -      -      -      -     vsubsd	%xmm6, %xmm3, %xmm12
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm5, %xmm4, %xmm10
+ -      -     0.94   0.06    -      -      -      -      -      -     vsubsd	%xmm6, %xmm4, %xmm9
+ -      -     0.49   0.51    -      -      -      -      -      -     vaddsd	%xmm4, %xmm6, %xmm7
+ -      -     0.53   0.47    -      -      -      -      -      -     vmulsd	%xmm2, %xmm11, %xmm0
+ -      -     0.97   0.03    -      -      -      -      -      -     vmulsd	%xmm11, %xmm12, %xmm1
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm11, %xmm12, %xmm13
+ -      -     0.02   0.98   0.50   0.50    -      -      -      -     vfmadd132sd	351621(%rip), %xmm0, %xmm1
+ -      -     0.50   0.50    -      -      -      -      -      -     vaddsd	%xmm1, %xmm0, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm5, %xmm3, %xmm1
+ -      -     0.51   0.49    -      -      -      -      -      -     vfmadd231sd	%xmm10, %xmm2, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfmadd231sd	%xmm10, %xmm2, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm12, %xmm11, %xmm12
+ -      -     0.51   0.49    -      -      -      -      -      -     vfmadd231sd	%xmm1, %xmm1, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfmadd231sd	%xmm9, %xmm9, %xmm0
+ -      -     0.51   0.49    -      -      -      -      -      -     vfmadd231sd	%xmm8, %xmm8, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vfmadd231sd	%xmm7, %xmm7, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm9, %xmm9, %xmm9
+ -      -     0.97   0.03    -      -      -      -      -      -     vfmadd231sd	%xmm1, %xmm1, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vsubsd	%xmm13, %xmm0, %xmm0
+ -      -     0.97   0.03    -      -      -      -      -      -     vsubsd	%xmm12, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm11, %xmm2, %xmm12
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm2, %xmm11, %xmm11
+ -      -     0.51   0.49    -      -      -      -      -      -     vsubsd	%xmm12, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm1, %xmm1, %xmm1
+ -      -     0.97   0.03    -      -      -      -      -      -     vsubsd	%xmm11, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm10, %xmm2, %xmm11
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm2, %xmm10, %xmm2
+ -      -     0.52   0.48    -      -      -      -      -      -     vsubsd	%xmm11, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm8, %xmm8, %xmm8
+ -      -     0.50   0.50    -      -      -      -      -      -     vsubsd	%xmm2, %xmm0, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vsubsd	%xmm1, %xmm0, %xmm0
+ -      -     0.51   0.49    -      -      -      -      -      -     vsubsd	%xmm9, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm7, %xmm7, %xmm7
+ -      -     0.51   0.49    -      -      -      -      -      -     vsubsd	%xmm8, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm6, %xmm4, %xmm1
+ -      -     0.51   0.49    -      -      -      -      -      -     vsubsd	%xmm7, %xmm0, %xmm0
+ -      -     0.51   0.49    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ -      -     0.51   0.49    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm5, %xmm3, %xmm2
+ -      -     0.51   0.49    -      -      -      -      -      -     vfmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.51   0.49    -      -      -      -      -      -     vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.03   0.97    -      -      -      -      -      -     vfmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.03   0.97    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vfmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vfmadd231sd	%xmm5, %xmm4, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vfnmadd231sd	%xmm6, %xmm3, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vfmadd231sd	%xmm5, %xmm3, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ -      -     0.01   0.99    -      -      -      -      -      -     vfmadd231sd	%xmm4, %xmm6, %xmm0
+ -      -     0.03   0.97    -      -      -      -      -      -     vfnmadd231sd	%xmm4, %xmm6, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm5, %xmm4, %xmm4
+ -      -     0.01   0.99    -      -      -      -      -      -     vfmadd231sd	%xmm5, %xmm3, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vfnmadd231sd	%xmm5, %xmm3, %xmm0
+ -      -      -     1.00    -      -      -      -      -      -     vaddsd	%xmm1, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm1, %xmm0, %xmm0
+ -     4.00   1.00    -      -      -      -      -      -      -     vdivsd	%xmm6, %xmm3, %xmm3
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm2, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vaddsd	%xmm2, %xmm0, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm3, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vaddsd	%xmm4, %xmm0, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm4, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vaddsd	%xmm3, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vsubsd	%xmm3, %xmm0, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vaddsd	%xmm4, %xmm0, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm4, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vaddsd	%xmm3, %xmm0, %xmm0
+ -      -     0.48   0.52    -      -      -      -      -      -     vsubsd	%xmm3, %xmm0, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vaddsd	%xmm4, %xmm0, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vsubsd	%xmm4, %xmm0, %xmm0
+ -      -     0.50   0.50    -      -      -      -      -      -     vaddsd	%xmm3, %xmm0, %xmm0
+ -      -     0.49   0.51    -      -      -      -      -      -     vsubsd	%xmm2, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm2, %xmm0, %xmm0
+ -      -     0.01   0.99    -      -      -      -      -      -     vsubsd	%xmm1, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm1, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vsubsd	%xmm2, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm2, %xmm0, %xmm0
+ -      -     0.01   0.99    -      -      -      -      -      -     vsubsd	%xmm1, %xmm0, %xmm0
+ -      -     0.02   0.98    -      -      -      -      -      -     vaddsd	%xmm1, %xmm0, %xmm0
+ -      -      -      -      -     0.01   1.00    -      -     0.99   vmovsd	%xmm0, (%rdx,%rax,8)
+ -      -      -      -      -      -      -     1.00    -      -     cmpq	%r8, %rcx

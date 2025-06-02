@@ -1,0 +1,142 @@
+Iterations:        100
+Instructions:      1900
+Total Cycles:      476
+Total uOps:        2200
+
+Dispatch Width:    6
+uOps Per Cycle:    4.62
+IPC:               3.99
+Block RThroughput: 4.5
+
+
+Instruction Info:
+[1]: #uOps
+[2]: Latency
+[3]: RThroughput
+[4]: MayLoad
+[5]: MayStore
+[6]: HasSideEffects (U)
+
+[1]    [2]    [3]    [4]    [5]    [6]    Instructions:
+ 1      5     0.50    *                   movq	-11504(%rbp), %rcx
+ 1      5     0.50    *                   movq	-11520(%rbp), %rdx
+ 1      5     0.50    *                   movq	-11528(%rbp), %rsi
+ 1      5     0.50    *                   movq	-11480(%rbp), %rdi
+ 1      1     0.25                        movq	%rax, %r12
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                        nopl	(%rax,%rax)
+ 1      5     0.50    *                   movq	(%r15), %rax
+ 1      1     0.25                        addq	$8, %r15
+ 1      5     0.50    *                   vmovsd	(%r14,%rax,8), %xmm1
+ 1      5     0.50    *                   vmovsd	(%r13,%rax,8), %xmm0
+ 2      9     0.50    *                   vsubsd	(%rsi,%rax,8), %xmm1, %xmm1
+ 2      9     0.50    *                   vsubsd	(%rdx,%rax,8), %xmm0, %xmm0
+ 1      4     0.50                        vmulsd	%xmm1, %xmm1, %xmm1
+ 1      4     0.50                        vfmadd132sd	%xmm0, %xmm1, %xmm0
+ 2      1     1.00           *            vmovsd	%xmm0, (%rdi,%rax,8)
+ 1      1     0.25                        cmpq	%r15, %rcx
+
+
+Dynamic Dispatch Stall Cycles:
+RAT     - Register unavailable:                      0
+RCU     - Retire tokens unavailable:                 0
+SCHEDQ  - Scheduler full:                            127  (26.7%)
+LQ      - Load queue full:                           0
+SQ      - Store queue full:                          0
+GROUP   - Static restrictions on the dispatch group: 0
+USH     - Uncategorised Structural Hazard:           0
+
+
+Dispatch Logic - number of cycles where we saw N micro opcodes dispatched:
+[# dispatched], [# cycles]
+ 0,              38  (8.0%)
+ 1,              1  (0.2%)
+ 3,              84  (17.6%)
+ 4,              42  (8.8%)
+ 5,              87  (18.3%)
+ 6,              224  (47.1%)
+
+
+Schedulers - number of cycles where we saw N micro opcodes issued:
+[# issued], [# cycles]
+ 0,          15  (3.2%)
+ 1,          7  (1.5%)
+ 2,          10  (2.1%)
+ 3,          144  (30.3%)
+ 4,          99  (20.8%)
+ 5,          12  (2.5%)
+ 6,          93  (19.5%)
+ 7,          47  (9.9%)
+ 8,          45  (9.5%)
+ 9,          3  (0.6%)
+ 11,          1  (0.2%)
+
+Scheduler's queue usage:
+[1] Resource name.
+[2] Average number of used buffer entries.
+[3] Maximum number of used buffer entries.
+[4] Total number of buffer entries.
+
+ [1]            [2]        [3]        [4]
+SKLPortAny       53         60         60
+
+
+Retire Control Unit - number of cycles where we saw N instructions retired:
+[# retired], [# cycles]
+ 0,           222  (46.6%)
+ 1,           149  (31.3%)
+ 2,           5  (1.1%)
+ 7,           1  (0.2%)
+ 17,          48  (10.1%)
+ 18,          51  (10.7%)
+
+Total ROB Entries:                224
+Max Used ROB Entries:             181  ( 80.8% )
+Average Used ROB Entries per cy:  154  ( 68.8% )
+
+
+Register File statistics:
+Total number of mappings created:    1500
+Max number of mappings used:         123
+
+
+Resources:
+[0]   - SKLDivider
+[1]   - SKLFPDivider
+[2]   - SKLPort0
+[3]   - SKLPort1
+[4]   - SKLPort2
+[5]   - SKLPort3
+[6]   - SKLPort4
+[7]   - SKLPort5
+[8]   - SKLPort6
+[9]   - SKLPort7
+
+
+Resource pressure per iteration:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    
+ -      -     2.01   2.02   4.50   4.51   1.00   1.48   1.49   0.99   
+
+Resource pressure by instruction:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    Instructions:
+ -      -      -      -     0.50   0.50    -      -      -      -     movq	-11504(%rbp), %rcx
+ -      -      -      -     0.52   0.48    -      -      -      -     movq	-11520(%rbp), %rdx
+ -      -      -      -     0.51   0.49    -      -      -      -     movq	-11528(%rbp), %rsi
+ -      -      -      -     0.94   0.06    -      -      -      -     movq	-11480(%rbp), %rdi
+ -      -      -      -      -      -      -     0.49   0.51    -     movq	%rax, %r12
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     nopl	(%rax,%rax)
+ -      -      -      -     0.94   0.06    -      -      -      -     movq	(%r15), %rax
+ -      -     0.01   0.01    -      -      -     0.51   0.47    -     addq	$8, %r15
+ -      -      -      -      -     1.00    -      -      -      -     vmovsd	(%r14,%rax,8), %xmm1
+ -      -      -      -     1.00    -      -      -      -      -     vmovsd	(%r13,%rax,8), %xmm0
+ -      -     0.92   0.08    -     1.00    -      -      -      -     vsubsd	(%rsi,%rax,8), %xmm1, %xmm1
+ -      -     0.53   0.47   0.09   0.91    -      -      -      -     vsubsd	(%rdx,%rax,8), %xmm0, %xmm0
+ -      -     0.09   0.91    -      -      -      -      -      -     vmulsd	%xmm1, %xmm1, %xmm1
+ -      -     0.46   0.54    -      -      -      -      -      -     vfmadd132sd	%xmm0, %xmm1, %xmm0
+ -      -      -      -      -     0.01   1.00    -      -     0.99   vmovsd	%xmm0, (%rdi,%rax,8)
+ -      -      -     0.01    -      -      -     0.48   0.51    -     cmpq	%r15, %rcx

@@ -1,0 +1,65 @@
+	call   <_ZNSt6chrono3_V212steady_clock3nowEv@plt>
+	cmpq   $0x0,-0x1d8(%rbp)
+	mov    %rax,-0x1c8(%rbp)
+	jle    <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x698>
+	cmpq   $0x8,-0x1d8(%rbp)
+	je     <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x7e0>
+	cmpb   $0x0,-0x1e8(%rbp)
+	je     <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x7e0>
+	cmpq   $0x2,-0x1f8(%rbp)
+	jbe    <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x8a2>
+	mov    -0x208(%rbp),%rdx
+	xor    %eax,%eax
+	data16 cs nopw 0x0(%rax,%rax,1)
+	data16 cs nopw 0x0(%rax,%rax,1)
+	data16 cs nopw 0x0(%rax,%rax,1)
+	data16 cs nopw 0x0(%rax,%rax,1)
+	vmovupd 0x0(%r13,%rax,1),%ymm1
+	vmovupd (%r14,%rax,1),%ymm0
+	vsubpd (%rbx,%rax,1),%ymm1,%ymm1
+	vsubpd (%r12,%rax,1),%ymm0,%ymm0
+	vmulpd %ymm1,%ymm1,%ymm1
+	vfmadd132pd %ymm0,%ymm1,%ymm0
+	vmovupd %ymm0,(%r15,%rax,1)
+	add    $0x20,%rax
+	cmp    %rdx,%rax
+	jne    <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x5c0>
+	mov    -0x200(%rbp),%rsi
+	mov    %rsi,%r11
+	and    $0xfffffffffffffffc,%r11
+	test   $0x3,%sil
+	je     <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x858>
+	lea    0x0(,%r11,8),%rax
+	sub    %r11,%rsi
+	lea    (%r12,%rax,1),%rcx
+	lea    (%r14,%rax,1),%r10
+	lea    (%rbx,%rax,1),%rdx
+	lea    0x0(%r13,%rax,1),%r9
+	lea    (%r15,%rax,1),%rdi
+	cmp    $0x1,%rsi
+	je     <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x8e3>
+	vzeroupper
+	vmovupd 0x0(%r13,%rax,1),%xmm1
+	vmovupd (%r14,%rax,1),%xmm0
+	vsubpd (%rbx,%rax,1),%xmm1,%xmm1
+	vsubpd (%r12,%rax,1),%xmm0,%xmm0
+	vmulpd %xmm1,%xmm1,%xmm1
+	vfmadd132pd %xmm0,%xmm1,%xmm0
+	vmovupd %xmm0,(%r15,%rax,1)
+	test   $0x1,%sil
+	je     <_Z17BM_MemoryBoundSoAI7SoA2VecIdLm10000000EEEvRN9benchmark5StateE+0x698>
+	and    $0xfffffffffffffffe,%rsi
+	shl    $0x3,%rsi
+	add    %rsi,%rcx
+	add    %rsi,%r10
+	add    %rsi,%rdx
+	add    %rsi,%r9
+	add    %rsi,%rdi
+	vmovsd (%r9),%xmm1
+	vmovsd (%r10),%xmm0
+	vsubsd (%rdx),%xmm1,%xmm1
+	vsubsd (%rcx),%xmm0,%xmm0
+	vmulsd %xmm1,%xmm1,%xmm1
+	vfmadd132sd %xmm0,%xmm1,%xmm0
+	vmovsd %xmm0,(%rdi)
+	call   <_ZNSt6chrono3_V212steady_clock3nowEv@plt>

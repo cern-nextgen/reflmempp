@@ -1,0 +1,149 @@
+Iterations:        100
+Instructions:      2600
+Total Cycles:      520
+Total uOps:        3000
+
+Dispatch Width:    6
+uOps Per Cycle:    5.77
+IPC:               5.00
+Block RThroughput: 5.0
+
+
+Instruction Info:
+[1]: #uOps
+[2]: Latency
+[3]: RThroughput
+[4]: MayLoad
+[5]: MayStore
+[6]: HasSideEffects (U)
+
+[1]    [2]    [3]    [4]    [5]    [6]    Instructions:
+ 1      0     0.17                        xorl	%edx, %edx
+ 1      1     0.25                        movq	%rax, %r14
+ 2      6     0.50    *                   cmpq	%r15, 8(%rsp)
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                  U     data16
+ 1      1     0.17                  U     cs
+ 1      1     0.17                        nopw	(%rax,%rax)
+ 1      1     0.17                        nopl	(%rax)
+ 1      5     0.50    *                   movsd	(%rbx,%rdx,2), %xmm0
+ 1      5     0.50    *                   movsd	8(%rbx,%rdx,2), %xmm1
+ 2      9     0.50    *                   subsd	(%r15,%rdx,2), %xmm0
+ 2      9     0.50    *                   subsd	8(%r15,%rdx,2), %xmm1
+ 1      4     0.50                        mulsd	%xmm0, %xmm0
+ 1      4     0.50                        mulsd	%xmm1, %xmm1
+ 1      4     0.50                        addsd	%xmm1, %xmm0
+ 2      1     1.00           *            movsd	%xmm0, (%r13,%rdx)
+ 1      1     0.25                        addq	$8, %rdx
+ 1      1     0.25                        cmpq	%rbp, %rdx
+
+
+Dynamic Dispatch Stall Cycles:
+RAT     - Register unavailable:                      0
+RCU     - Retire tokens unavailable:                 0
+SCHEDQ  - Scheduler full:                            0
+LQ      - Load queue full:                           0
+SQ      - Store queue full:                          0
+GROUP   - Static restrictions on the dispatch group: 0
+USH     - Uncategorised Structural Hazard:           0
+
+
+Dispatch Logic - number of cycles where we saw N micro opcodes dispatched:
+[# dispatched], [# cycles]
+ 0,              20  (3.8%)
+ 6,              500  (96.2%)
+
+
+Schedulers - number of cycles where we saw N micro opcodes issued:
+[# issued], [# cycles]
+ 0,          9  (1.7%)
+ 1,          5  (1.0%)
+ 2,          6  (1.2%)
+ 3,          3  (0.6%)
+ 4,          197  (37.9%)
+ 5,          1  (0.2%)
+ 6,          105  (20.2%)
+ 7,          1  (0.2%)
+ 8,          193  (37.1%)
+
+Scheduler's queue usage:
+[1] Resource name.
+[2] Average number of used buffer entries.
+[3] Maximum number of used buffer entries.
+[4] Total number of buffer entries.
+
+ [1]            [2]        [3]        [4]
+SKLPortAny       11         14         60
+
+
+Retire Control Unit - number of cycles where we saw N instructions retired:
+[# retired], [# cycles]
+ 0,           311  (59.8%)
+ 1,           108  (20.8%)
+ 3,           1  (0.2%)
+ 14,          1  (0.2%)
+ 25,          99  (19.0%)
+
+Total ROB Entries:                224
+Max Used ROB Entries:             118  ( 52.7% )
+Average Used ROB Entries per cy:  102  ( 45.5% )
+
+
+Register File statistics:
+Total number of mappings created:    1200
+Max number of mappings used:         46
+
+
+Resources:
+[0]   - SKLDivider
+[1]   - SKLFPDivider
+[2]   - SKLPort0
+[3]   - SKLPort1
+[4]   - SKLPort2
+[5]   - SKLPort3
+[6]   - SKLPort4
+[7]   - SKLPort5
+[8]   - SKLPort6
+[9]   - SKLPort7
+
+
+Resource pressure per iteration:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    
+ -      -     2.99   3.01   2.51   2.51   1.00   1.01   1.99   0.98   
+
+Resource pressure by instruction:
+[0]    [1]    [2]    [3]    [4]    [5]    [6]    [7]    [8]    [9]    Instructions:
+ -      -      -      -      -      -      -      -      -      -     xorl	%edx, %edx
+ -      -      -     0.01    -      -      -      -     0.99    -     movq	%rax, %r14
+ -      -     0.01   0.98   0.50   0.50    -     0.01    -      -     cmpq	%r15, 8(%rsp)
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     data16
+ -      -      -      -      -      -      -      -      -      -     cs
+ -      -      -      -      -      -      -      -      -      -     nopw	(%rax,%rax)
+ -      -      -      -      -      -      -      -      -      -     nopl	(%rax)
+ -      -      -      -     0.50   0.50    -      -      -      -     movsd	(%rbx,%rdx,2), %xmm0
+ -      -      -      -     0.50   0.50    -      -      -      -     movsd	8(%rbx,%rdx,2), %xmm1
+ -      -     0.01   0.99   0.50   0.50    -      -      -      -     subsd	(%r15,%rdx,2), %xmm0
+ -      -     0.99   0.01   0.50   0.50    -      -      -      -     subsd	8(%r15,%rdx,2), %xmm1
+ -      -     0.02   0.98    -      -      -      -      -      -     mulsd	%xmm0, %xmm0
+ -      -     0.98   0.02    -      -      -      -      -      -     mulsd	%xmm1, %xmm1
+ -      -     0.98   0.02    -      -      -      -      -      -     addsd	%xmm1, %xmm0
+ -      -      -      -     0.01   0.01   1.00    -      -     0.98   movsd	%xmm0, (%r13,%rdx)
+ -      -      -      -      -      -      -      -     1.00    -     addq	$8, %rdx
+ -      -      -      -      -      -      -     1.00    -      -     cmpq	%rbp, %rdx
