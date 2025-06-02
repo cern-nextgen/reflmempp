@@ -95,7 +95,7 @@ for (int i = 0; i < s.v.x.size(); i++) {
 ```
 
 ## Usage
-- `edg`: contains the versions tested with the EDG experimental reflection compiler only available on [Compiler Explorer](https://godbolt.org/z/13anqE1Pa). The implementation can viewed on Compiler Explorer via the following link: https://godbolt.org/z/Ehxceref8
+- `edg`: contains the versions tested with the EDG experimental reflection compiler only available on [Compiler Explorer](https://godbolt.org/z/13anqE1Pa). The implementation can viewed on Compiler Explorer via the following link: https://godbolt.org/z/b5KhhGKGv
 
 - `manual`: contains the manually unrolled version of each example. These can be compiled with a standard C++ compiler using CMake:
 ```

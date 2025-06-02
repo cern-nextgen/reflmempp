@@ -157,7 +157,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
   auto soa_member = identifier_of(member);
   auto type = type_remove_cvref(type_of(member));
 
-  if (type_is_container) {
+  if (type_is_container(type)) {
     auto value_type = get_scalar_type(type);
 
     // Inject span initialization for the current vector member.
@@ -198,7 +198,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
 
 consteval void gen_push_back(std::meta::info member) {
   auto name = identifier_of(member);
-  auto type = type_of(member);
+  auto type = type_remove_cvref(type_of(member));
 
   if (type_is_container(type)) {
     auto value_type = get_scalar_type(type);
@@ -214,7 +214,7 @@ consteval void gen_push_back(std::meta::info member) {
   } else if (type_is_struct(type)) {
 
   } else {
-    __report_and_inject(^^{ new (&\id(name)[m_size]) typename[: \(type):](obj.\id(name)); });
+    __report_and_inject(^^{ new (&\id(name)[m_size]) typename[: \(type) :](obj.\id(name)); });
   }
 }
 

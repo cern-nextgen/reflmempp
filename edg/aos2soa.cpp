@@ -41,7 +41,7 @@ struct LorentzVector {
 };
 
 struct Particle {
-  // int &m_particleID;
+  int &m_particleID;
 //   LorentzVector<double> m_momentum;
 //   PositionVector3D<double> m_referencePoint;
   std::span<float> vector;
@@ -59,40 +59,17 @@ int main() {
   alignas(64) std::vector<std::byte> buf(SoA::ComputeSize(n));
   SoA maos(buf.data(), buf.size(), n);
 
-//   std::array<int, 3> ids = {0, 1, 2};
-//   std::array<float, 3> ref_x = {3, 6, 9};
-//   std::array<float, 3> ref_y = {4, 7, 10};
-//   std::array<float, 3> ref_z = {5, 8, 11};////////
-//   std::array<float, 3> momentum_x = {12, 16, 20};
-//   std::array<float, 3> momentum_y = {13, 17, 21};
-//   std::array<float, 3> momentum_z = {14, 18, 22};
-//   std::array<float, 3> momentum_t = {15, 19, 23};
-
-//   std::copy(ids.begin(), ids.end(), maos.m_particleID.begin());
-//   std::copy(ref_x.begin(), ref_x.end(), maos.m_referencePoint.fCoordinates.fX.begin());
-//   std::copy(ref_y.begin(), ref_y.end(), maos.m_referencePoint.fCoordinates.fY.begin());
-//   std::copy(ref_z.begin(), ref_z.end(), maos.m_referencePoint.fCoordinates.fZ.begin());
-//   std::copy(momentum_x.begin(), momentum_x.end(), maos.m_momentum.fX.begin());
-//   std::copy(momentum_y.begin(), momentum_y.end(), maos.m_momentum.fY.begin());
-//   std::copy(momentum_z.begin(), momentum_z.end(), maos.m_momentum.fZ.begin());
-//   std::copy(momentum_t.begin(), momentum_t.end(), maos.m_momentum.fT.begin());
-
-  // SoA::SVal s;
-  // s.vector.push_back(1);
-  // maos.push_back(s);
-
   // maos.push_back();
   // maos.push_back({1, 2});
-  maos.push_back({{1, 2}});
-  maos.push_back({{3, 4, 5, 6}});
-  maos.push_back({{7}});
+  maos.push_back({0, {1, 2}});
+  maos.push_back({1, {3, 4, 5, 6}});
+  maos.push_back({2, {7}});
   // maos.push_back({1, {}});
   // maos.push_back({1, {2, 3, 4}});
 //   maos.push_back({2});
 
   // std::cout << "----------- Before ------------\n";
   print_soa_as_aos(maos);
-  print_member(maos.vector_offsets);
 
 //   maos[0].SetId(9);
 //   maos[1].m_referencePoint.SetX(9999);
