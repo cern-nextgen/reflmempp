@@ -178,9 +178,8 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
     // the current member to the id_tokens to access the members of the
     // nested struct.
     for (auto submember : nsdms(type)) {
-      auto offset = gen_soa_init(submember, ^^{
+      offset_tokens = gen_soa_init(submember, ^^{
                 \tokens(id_tokens).\id(identifier_of(submember))}, offset_tokens);
-      offset_tokens = ^^{ \tokens(offset_tokens) + \tokens(offset) };
     }
   } else { // Scalar members
     // Inject span initialization for the current member.
@@ -196,25 +195,26 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
   return offset_tokens;
 }
 
-consteval void gen_push_back(std::meta::info member) {
-  auto name = identifier_of(member);
+consteval void gen_push_back(std::meta::info member, std::meta::info id_tokens) {
   auto type = type_remove_cvref(type_of(member));
 
   if (type_is_container(type)) {
+    auto name = identifier_of(member);
     auto value_type = get_scalar_type(type);
 
-    __report_and_inject(^^{
+    queue_injection(^^{
       for (size_t i = 0; i < obj.\id(name).size(); i++) {
-        new (&\id(name)[\id(name, "_offsets"sv)[m_size] + i]) typename[: \(value_type):](obj.\id(name)[i]);
+        new (&\tokens(id_tokens)[\id(name, "_offsets"sv)[m_size] + i]) typename[: \(value_type):](obj.\tokens(id_tokens)[i]);
       }
     });
 
-    __report_and_inject(
-        ^^{ \id(name, "_offsets"sv)[m_size + 1] = \id(name, "_offsets"sv)[m_size] + obj.\id(name).size(); });
+    queue_injection(^^{ \id(name, "_offsets"sv)[m_size + 1] = \id(name, "_offsets"sv)[m_size] + obj.\tokens(id_tokens).size(); });
   } else if (type_is_struct(type)) {
-
+    for (auto submember : nsdms(type)) {
+      gen_push_back(submember, ^^{ \tokens(id_tokens).\id(identifier_of(submember)) });
+    }
   } else {
-    __report_and_inject(^^{ new (&\id(name)[m_size]) typename[: \(type) :](obj.\id(name)); });
+    queue_injection(^^{ new (&\tokens(id_tokens)[m_size]) typename[: \(type) :](obj.\tokens(id_tokens)); });
   }
 }
 

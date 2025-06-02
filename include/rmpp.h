@@ -153,7 +153,7 @@ public:
 
     consteval {
       for (auto member : nsdms(^^S)) {
-        detail::gen_push_back(member);
+        detail::gen_push_back(member, ^^{ \id(identifier_of(member)) });
       }
     }
 
