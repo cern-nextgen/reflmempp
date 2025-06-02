@@ -1,125 +1,107 @@
-// Simple SoA structure with an AoS interface using P2996 reflection and P3294 token injection
+// SoA structure with an AoS interface using P2996 reflection and P3294 token
+// injection. Each array in the SoA is allocated in a contiguous storage
+// container.
 
+#define __cpp_lib_reflection 20240815
+
+#include "rmpp.h"
+#include <cassert>
+#include <cmath>
 #include <experimental/meta>
 #include <iostream>
+#include <tuple>
 
-namespace rmpp {
-using namespace std::literals;
-
-consteval void gen_sov_members(auto t) {
-    for (auto member : nonstatic_data_members_of(t)) {
-        auto vec_member = ^{
-          \id("_"sv, name_of(member))
-        };
-
-        queue_injection(^{
-          std::vector<typename[:\(type_of(member)):]> \tokens(vec_member);
-        });
-    }
-}
-
-consteval void gen_sor_members(auto t) {
-    for (auto member : nonstatic_data_members_of(t)) {
-        queue_injection(^{
-          const typename[:\(type_of(member)):] & \id(name_of(member));
-        });
-    }
-}
+using namespace std::literals::string_view_literals;
 
 template <typename T>
-class vector {
-    // ------------ generate -----------
-    //   private:
-    //      std:vector<double> _x, _y, _z, _value;
-    //      struct aos_view {
-    //          double &x, &y, &z, &value;
-    //      }
-    //
-    //   public:
-    //     size_t size() {
-    //          return _x.size();
-    //     }
-    //
-    //     void push_back(T elem) {
-    //          _x.push_back(elem.x);
-    //          _y.push_back(elem.y);
-    //          _z.push_back(elem.z);
-    //          _value.push_back(elem.value);
-    //     }
-    //
-    //     auto operator[](std::size_t idx) {
-    //          return aos_view(_x[idx], _y[idx], _z[idx], _value[idx]);
-    //     }
-   private:
-    consteval { gen_sov_members(^T); }
+struct Cartesian3D {
+  T &fX, &fY, &fZ;
 
-    struct aos_view {
-        consteval { gen_sor_members(^T); }
-    };
-
-   public:
-    size_t size() const {
-        consteval {
-            auto first = nonstatic_data_members_of(^T)[0];
-            queue_injection(^{
-              return \id("_"sv, name_of(first)).size();
-            });
-        }
-    }
-
-    void push_back(T const& elem) & {
-        consteval {
-            // push back the data into sov
-            for (auto member : nonstatic_data_members_of(^T)) {
-                auto name = name_of(member);
-
-                queue_injection(^{
-                  \id("_"sv, name).push_back(elem.\id(name));
-                });
-            }
-        }
-    }
-
-    aos_view operator[](std::size_t idx) const {
-        consteval {
-            // gather references to sov elements
-            std::meta::list_builder member_data_tokens{};
-            for (auto member : nonstatic_data_members_of(^T)) {
-                auto name = name_of(member);
-
-                member_data_tokens += ^{
-                  .\id(name) = \id("_"sv, name)[idx]
-                };
-            }
-            // __report_tokens(member_data_tokens);
-
-            queue_injection(^{
-              return aos_view{\tokens(member_data_tokens)};
-            });
-        }
-    }
+  void SetY(T yy) { fY = yy; }
 };
-}  // namespace rmpp
 
-// dummy
-struct data {
-    double x, y, z, value;
+template <typename T>
+struct PositionVector3D {
+  Cartesian3D<T> fCoordinates;
+
+  void SetX(T yy) { fCoordinates.SetY(yy); }
 };
+
+template <typename T>
+struct LorentzVector {
+  T &fX, &fY, &fZ, &fT;
+
+  T Pt2() const { return fX * fX + fY * fY; }
+  void SetPxPyPzE(T px, T py, T pz, T e) {
+    fX = px;
+    fY = py;
+    fZ = pz;
+    fT = e;
+  }
+};
+
+struct Particle {
+  // int &m_particleID;
+//   LorentzVector<double> m_momentum;
+//   PositionVector3D<double> m_referencePoint;
+  std::span<float> vector;
+//   std::array<std::array<float, 2> , 3>  matrix;
+
+//   void Se2tId(int id) { m_particleID = id; }
+
+//   double pt2() const { return m_momentum.Pt2(); }
+};
+
+using SoA = rmpp::AoS2SoA<Particle, 64>;
 
 int main() {
-    rmpp::vector<data> maos;
+  constexpr size_t n = 3;
+  alignas(64) std::vector<std::byte> buf(SoA::ComputeSize(n));
+  SoA maos(buf.data(), buf.size(), n);
 
-    data e1 = {0, 1, 2, 3};
-    data e2 = {4, 5, 6, 7};
-    data e3 = {8, 9, 10, 11};
+//   std::array<int, 3> ids = {0, 1, 2};
+//   std::array<float, 3> ref_x = {3, 6, 9};
+//   std::array<float, 3> ref_y = {4, 7, 10};
+//   std::array<float, 3> ref_z = {5, 8, 11};////////
+//   std::array<float, 3> momentum_x = {12, 16, 20};
+//   std::array<float, 3> momentum_y = {13, 17, 21};
+//   std::array<float, 3> momentum_z = {14, 18, 22};
+//   std::array<float, 3> momentum_t = {15, 19, 23};
 
-    maos.push_back(e1);
-    maos.push_back(e2);
-    maos.push_back(e3);
+//   std::copy(ids.begin(), ids.end(), maos.m_particleID.begin());
+//   std::copy(ref_x.begin(), ref_x.end(), maos.m_referencePoint.fCoordinates.fX.begin());
+//   std::copy(ref_y.begin(), ref_y.end(), maos.m_referencePoint.fCoordinates.fY.begin());
+//   std::copy(ref_z.begin(), ref_z.end(), maos.m_referencePoint.fCoordinates.fZ.begin());
+//   std::copy(momentum_x.begin(), momentum_x.end(), maos.m_momentum.fX.begin());
+//   std::copy(momentum_y.begin(), momentum_y.end(), maos.m_momentum.fY.begin());
+//   std::copy(momentum_z.begin(), momentum_z.end(), maos.m_momentum.fZ.begin());
+//   std::copy(momentum_t.begin(), momentum_t.end(), maos.m_momentum.fT.begin());
 
-    std::cout << "maos.size = " << maos.size() << "\n";
-    for (size_t i = 0; i != maos.size(); ++i) {
-        std::cout << "maos[" << i << "] = ( x:" << maos[i].x << ", y:" << maos[i].y
-                  << ", z:" << maos[i].z << ", value:" << maos[i].value << ")\n";
-    }
+  // SoA::SVal s;
+  // s.vector.push_back(1);
+  // maos.push_back(s);
+
+  // maos.push_back();
+  // maos.push_back({1, 2});
+  maos.push_back({{1, 2}});
+  maos.push_back({{3, 4, 5, 6}});
+  maos.push_back({{7}});
+  // maos.push_back({1, {}});
+  // maos.push_back({1, {2, 3, 4}});
+//   maos.push_back({2});
+
+  // std::cout << "----------- Before ------------\n";
+  print_soa_as_aos(maos);
+  print_member(maos.vector_offsets);
+
+//   maos[0].SetId(9);
+//   maos[1].m_referencePoint.SetX(9999);
+//   maos[1].m_referencePoint.fCoordinates.fZ = 8888;
+//   maos[2].m_momentum.SetPxPyPzE(0, 0, 0, 0);
+
+//   std::cout << "------------ After -----------\n";
+//   print_soa_as_aos(maos);
+//   std::cout << "maos[2].pt2() = " << maos[2].pt2() << "\n";
+
+  return 0;
 }

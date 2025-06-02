@@ -8,7 +8,7 @@
 #include <vector>
 
 // #include "mdspan.h" // doesnt't work with eccp? fails template deduction with md[j][k], think it's related to c++ std used
-#include "mdspan/mdspan.hpp"
+#include "mdspan.h"
 
 #ifdef __cpp_lib_reflection
 #include <experimental/meta>
@@ -106,6 +106,36 @@ concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, ge
 ///
 
 #ifdef __cpp_lib_reflection
+namespace __impl {
+  template<auto... vals>
+  struct replicator_type {
+    template<typename F>
+      constexpr auto operator>>(F body) const -> decltype(auto) {
+        return body.template operator()<vals...>();
+      }
+  };
+
+  template<auto... vals>
+  replicator_type<vals...> replicator = {};
+}
+
+template<typename R>
+consteval auto expand_all(R range) {
+  std::vector<std::meta::info> args;
+  for (auto r : range) {
+    args.push_back(reflect_value(r));
+  }
+  return substitute(^^__impl::replicator, args);
+}
+
+consteval auto nsdms(std::meta::info type) -> std::vector<std::meta::info> {
+#ifdef __clang__
+    return nonstatic_data_members_of(type, std::meta::access_context::current());
+#else
+    return nonstatic_data_members_of(type);
+#endif
+}
+
 template <class T>
 concept Reflection = std::same_as<std::meta::info, T>;
 
@@ -145,6 +175,11 @@ consteval std::meta::info get_scalar_type(std::meta::info t) {
 // Print utilities
 ///
 
+consteval void __report_and_inject(std::meta::info tokens) {
+  __report_tokens(tokens);
+  queue_injection(^^{ \tokens(tokens)});
+}
+
 auto indent_string(int indent) {
   std::string r;
   for (int i = 0; i < indent; i++) {
@@ -161,11 +196,12 @@ void print_member(const T &v) {
       if (i != 0) std::cout << ", ";
       print_member(v[i]);
     }
+    std::cout << "}";
   } else if constexpr (Struct<T>) {
     std::cout << identifier_of(^^T) << "{ ";
 
     int i = 0;
-    [:expand(nonstatic_data_members_of(^^T,  std::meta::access_context::current())):] >> [&]<auto e> {
+    [:expand(nsdms(^^T)):] >> [&]<auto e> {
       if (i != 0) std::cout << ", ";
       print_member(v.[:e:]);
       i++;
@@ -190,7 +226,7 @@ void print_member_addr(const T &v) {
     std::cout << identifier_of(^^T) << "{ ";
 
     int i = 0;
-    [:expand(nonstatic_data_members_of(^^T, std::meta::access_context::current())):] >> [&]<auto e> {
+    [:expand(nsdms(^^T)):] >> [&]<auto e> {
       if (i != 0) std::cout << ", ";
       print_member_addr(v.[:e:]);
       i++;
@@ -207,13 +243,13 @@ void print_soa_as_aos(auto &aos) {
   for (size_t i = 0; i != aos.size(); ++i) {
     std::cout << "\naos[" << i << "] = (\n";
 
-    [:expand(nonstatic_data_members_of(^^decltype(aos[i]), std::meta::access_context::current())):] >> [&]<auto e> {
+    [:expand(nsdms(^^decltype(aos[i]))):] >> [&]<auto e> {
       std::cout << "\t" << identifier_of(e) << ": ";
       print_member(aos[i].[:e:]);
       std::cout << "\n";
     };
 
-    [:expand(nonstatic_data_members_of(^^decltype(aos[i]), std::meta::access_context::current())):] >> [&]<auto e> {
+    [:expand(nsdms(^^decltype(aos[i]))):] >> [&]<auto e> {
       std::cout << "\t" << identifier_of(e) << " ADDR: ";
       print_member_addr(aos[i].[:e:]);
       std::cout << "\n";
