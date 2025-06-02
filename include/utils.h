@@ -8,7 +8,7 @@
 #include <vector>
 
 // #include "mdspan.h" // doesnt't work with eccp? fails template deduction with md[j][k], think it's related to c++ std used
-#include "mdspan.h"
+#include "kokkos/mdspan.h"
 
 #ifdef __cpp_lib_reflection
 #include <experimental/meta>
@@ -95,6 +95,9 @@ struct get_inner_type<T> {
   using type = typename get_inner_type<typename T::value_type>::type;
 };
 
+template <typename T>
+using inner_type = get_inner_type<T>::type;
+
 template <class T>
 concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, get_array_size<T>::size>>;
 // requires std::same_as<T,
@@ -158,9 +161,6 @@ consteval bool type_is_nested_container(std::meta::info r) {
 consteval bool type_is_eigen(std::meta::info r) {
   return extract<bool>(std::meta::substitute(^^Eigen, {r}));
 }
-
-template <typename T>
-using inner_type = get_inner_type<T>::type;
 
 consteval std::meta::info get_scalar_type(std::meta::info t) {
   // if (type_is_container(t)) { return

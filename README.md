@@ -7,8 +7,8 @@ The goal is to have a data structure with a user-friendly interface that is inde
 Currently we have only implemented conversion of an Array-of-Structures (AoS) with a struct `S` to a Struct-of-Arrays (SoA), but we plan to include other layouts (e.g., AoSoA) and data reordering.
 
 ## How It Works
-We provide the class `rmpp::vector<S, Alignment>`, which takes a structure `S` and specializes into an SoA version of the structure `S`. In this class, we:
-   - provide a constructor `vector(size_t n)`,
+We provide the class `rmpp::AoS2SoA<S, Alignment>`, which takes a structure `S` and specializes into an SoA version of the structure `S`. In this class, we:
+   - provide a constructor `AoS2SoA(size_t n)`,
    - allocate data in a single contiguous chunk of bytes, aligned to offsets of size `Alignment`,
    - define SoA members with type `std::span` that point to the byte storage,
      - Nested struct members are recursively transformed into SoAs
@@ -25,47 +25,47 @@ struct S {
    Vec v;
 };
 ```
-Then if the user instantiates an `rmpp::vector` with the struct `S`:
+Then if the user instantiates an `rmpp::AoS2SoA` with the struct `S`:
 ```cpp
-using SoA = rmpp::vector<S>;
+using SoA = rmpp::AoS2SoA<S>;
 SoA s;
 ```
-This is what will be generated using reflection:
+This is what will be generated using reflection (see also `manual/aos2soa.cpp`):
 ```cpp
 namespace rmpp {
    template <typename T, size_t Alignment>
-   class vector<S> {
-      std::vector<std::byte storage>
+   class AoS2SoA<S> {
+      std::span<std::byte storage>
 
       // START GENERATED CODE
       std::span<int> id;
 
-      struct VecRef {
+      struct VecSoA {
          std::span<double> x, y, z;
       }
-      VecRef v;
+      VecSoA v;
       // END GENERATED CODE
 
       constexpr inline size_t align_size(size_t size) const {
          return ((size + Alignment - 1) / Alignment) * Alignment;
       }
 
-      vector(size_t n) {
+      AoS2SoA(std::byte *buf, const size_t buf_size, const size_t capacity) {
+         storage = std::span<std::byte>(buf, buf_size);
+         m_size = 0;
+         m_capacity = capacity;
+
          // START GENERATED CODE
          m_size = n;
 
          // sum of the sizes of: S::id, Vec:::x, Vec::y, and Vec::z
-         size_t total_byte_size = align_size(n * sizeof(int)) + align_size(n * sizeof(double))
-                                  + align_size(n * sizeof(double)) + align_size(n * sizeof(double)));
-         storage.resize(total_byte_size);
-
          id = std::span(reinterpret_cast<int *>(storage.data(), m_size))
-         v.x = std::span(reinterpret_cast<double *>(storage.data() + align_size(n * sizeof(int)), m_size))
-         v.y = std::span(reinterpret_cast<double *>(storage.data() + align_size(n * (sizeof(int))
-                                                    + align_size(n * sizeof(double))), m_size))
-         v.z = std::span(reinterpret_cast<double *>(storage.data() + align_size(n * (sizeof(int)))
-                                                    + align_size(n * sizeof(double))
-                                                    + align_size(n * sizeof(double)), m_size))
+         v.x = std::span(reinterpret_cast<double *>(storage.data() + align_size(id.size_bytes()), m_size))
+         v.y = std::span(reinterpret_cast<double *>(storage.data() + align_size(id.size_bytes())
+                                                    + align_size(v.x.size_bytes()), m_size))
+         v.z = std::span(reinterpret_cast<double *>(storage.data() + align_size(id.size_bytes())
+                                                                   + align_size(v.x.size_bytes())
+                                                                   + align_size(v.y.size_bytes()), m_size))
 
          // END GENERATED CODE
       }
