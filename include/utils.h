@@ -8,7 +8,7 @@
 #include <vector>
 
 // #include "mdspan.h" // doesnt't work with eccp? fails template deduction with md[j][k], think it's related to c++ std used
-#include "kokkos/mdspan.h"
+#include "mdspan.hpp"
 
 #ifdef __cpp_lib_reflection
 #include <experimental/meta>
