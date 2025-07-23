@@ -61,14 +61,6 @@ concept Container = Span<ContainerType> || requires(ContainerType a, const Conta
 template <typename T>
 concept NestedContainer = Container<T> && Container<typename T::value_type>;
 
-///
-// Eigen Matrices
-///
-
-// something more generic?
-template <typename T, size_t D>
-using EigenMatrix = std::array<std::array<T, D>, D>;
-
 template <typename>
 struct get_array_size;
 
@@ -80,7 +72,7 @@ struct get_array_size<std::array<T, S>> {
 // Multiple size of dimensions for nested arrays.
 template <typename T, size_t N, size_t M>
 struct get_array_size<std::array<std::array<T, M>, N>> {
-  constexpr static size_t size = N * get_array_size<std::array<T,M>>::size;
+  constexpr static size_t size = N * get_array_size<std::array<T, M>>::size;
 };
 
 template <typename T>
@@ -98,11 +90,17 @@ struct get_inner_type<T> {
 template <typename T>
 using inner_type = get_inner_type<T>::type;
 
+///
+// Eigen Matrices
+///
+
+#ifndef EIGEN_WORLD_VERSION
+template <typename T, size_t D>
+using EigenMatrix = std::array<std::array<T, D>, D>;
+
 template <class T>
 concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, get_array_size<T>::size>>;
-// requires std::same_as<T,
-// EigenMatrix<typename[:get_scalar_type(type_decay(^^T)):],
-// get_array_size<T>::size>>;
+#endif
 
 ///
 // Methods taking std::meta::info
@@ -110,19 +108,19 @@ concept Eigen = std::same_as<T, EigenMatrix<typename get_inner_type<T>::type, ge
 
 #ifdef __cpp_lib_reflection
 namespace __impl {
-  template<auto... vals>
-  struct replicator_type {
-    template<typename F>
-      constexpr auto operator>>(F body) const -> decltype(auto) {
-        return body.template operator()<vals...>();
-      }
-  };
+template <auto... vals>
+struct replicator_type {
+  template <typename F>
+  constexpr auto operator>>(F body) const -> decltype(auto) {
+    return body.template operator()<vals...>();
+  }
+};
 
-  template<auto... vals>
-  replicator_type<vals...> replicator = {};
-}
+template <auto... vals>
+replicator_type<vals...> replicator = {};
+} // namespace __impl
 
-template<typename R>
+template <typename R>
 consteval auto expand_all(R range) {
   std::vector<std::meta::info> args;
   for (auto r : range) {
@@ -133,9 +131,9 @@ consteval auto expand_all(R range) {
 
 consteval auto nsdms(std::meta::info type) -> std::vector<std::meta::info> {
 #ifdef __clang__
-    return nonstatic_data_members_of(type, std::meta::access_context::current());
+  return nonstatic_data_members_of(type, std::meta::access_context::current());
 #else
-    return nonstatic_data_members_of(type);
+  return nonstatic_data_members_of(type);
 #endif
 }
 
@@ -158,9 +156,11 @@ consteval bool type_is_nested_container(std::meta::info r) {
   return extract<bool>(std::meta::substitute(^^NestedContainer, {r}));
 }
 
+#ifndef EIGEN_WORLD_VERSION
 consteval bool type_is_eigen(std::meta::info r) {
   return extract<bool>(std::meta::substitute(^^Eigen, {r}));
 }
+#endif
 
 consteval std::meta::info get_scalar_type(std::meta::info t) {
   // if (type_is_container(t)) { return
