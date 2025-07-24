@@ -15,7 +15,7 @@ using namespace std::literals::string_view_literals;
 namespace rmpp {
 constexpr auto member_prefix = ""sv;
 
-static size_t max_inner_array_size = 8; // max elements for inner array per data element
+static size_t max_inner_array_elem = 256; // max elements for inner array per data element
 
 template <typename T>
 struct ValHelper {
@@ -48,7 +48,7 @@ private:
 
     if constexpr (type_is_container(type)) {
       constexpr auto value_type = get_scalar_type(type);
-      return align_size(n * max_inner_array_size * sizeof(typename[: value_type :]));
+      return align_size(max_inner_array_elem * sizeof(typename[:value_type:]));
     } else if constexpr (type_is_struct(type)) {
       size_t struct_size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> {
         return (0 + ... + compute_size<submembers>(n));
@@ -100,7 +100,8 @@ public:
   // Workaround:
   consteval {
     namespace_inject(^^rmpp, ^^{
-      template<> struct ValHelper<typename[: \(^^S) :]>::SVal {
+      template <>
+      struct ValHelper<typename[: \(^^S):]>::SVal {
         \tokens(detail::gen_value_type(^^S))
       };
     });
@@ -115,11 +116,11 @@ public:
   }
 
   /// -------------------------------------------------------------------------------------
-  /// Constructor for that takes the number of data elements. Uses `max_inner_array_size`
-  /// as the size allocated to each vector data member.
+  /// Constructor for that takes the number of data elements. Uses `max_inner_array_elem`
+  /// as the size allocated to inner array elements for all data elements in total.
   AoS2SoA(std::byte *buf, const size_t buf_size, const size_t capacity) {
-    std::cout << "storage at " << (long long) static_cast<void *>(buf) << " with capacity " << capacity
-              << " and size " << buf_size << " bytes\n";
+    std::cout << "storage at " << (long long)static_cast<void *>(buf) << " with capacity " << capacity << " and size "
+              << buf_size << " bytes\n";
     storage = std::span<std::byte>(buf, buf_size);
     m_size = 0;
     m_capacity = capacity;
@@ -129,7 +130,7 @@ public:
     consteval {
       std::meta::info offset_tokens = ^^{ 0 };
       for (auto member : nsdms(^^S)) {
-        offset_tokens = detail::gen_soa_init(member, ^^{ \id(identifier_of(member)) }, offset_tokens);
+        offset_tokens = detail::gen_soa_init(member, ^^{ \id(identifier_of(member))}, offset_tokens);
       }
     }
   }
@@ -140,20 +141,18 @@ public:
 
   aos_cview operator[](const size_t idx) const { return generate_view<aos_cview>(idx); }
 
-  void push_back() {
-    m_size++;
-  }
+  void push_back() { m_size++; }
 
   void push_back(const value_type obj) {
     if (m_size == m_capacity) {
-        // todo: reallocate?
-        std::cerr << "Capacity reached" << std::endl;
-        return;
+      // todo: reallocate?
+      std::cerr << "Capacity reached" << std::endl;
+      return;
     }
 
     consteval {
       for (auto member : nsdms(^^S)) {
-        detail::gen_push_back(member, ^^{ \id(identifier_of(member)) });
+        detail::gen_push_back(member, ^^{ \id(identifier_of(member))});
       }
     }
 

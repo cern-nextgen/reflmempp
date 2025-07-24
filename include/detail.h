@@ -164,7 +164,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
     __report_and_inject(^^{
       \tokens(id_tokens) =
           std::span(reinterpret_cast<typename[: \(value_type):] *>(storage.data() + \tokens(offset_tokens)),
-                    m_capacity * max_inner_array_size);
+                    max_inner_array_elem);
     });
 
     // +1 to be able to calculate the size of the last data element based on the difference
@@ -204,17 +204,19 @@ consteval void gen_push_back(std::meta::info member, std::meta::info id_tokens) 
 
     queue_injection(^^{
       for (size_t i = 0; i < obj.\id(name).size(); i++) {
-        new (&\tokens(id_tokens)[\id(name, "_offsets"sv)[m_size] + i]) typename[: \(value_type):](obj.\tokens(id_tokens)[i]);
+        new (&\tokens(id_tokens)[\id(name, "_offsets"sv)[m_size] + i])
+            typename[: \(value_type):](obj.\tokens(id_tokens)[i]);
       }
     });
 
-    queue_injection(^^{ \id(name, "_offsets"sv)[m_size + 1] = \id(name, "_offsets"sv)[m_size] + obj.\tokens(id_tokens).size(); });
+    queue_injection(
+        ^^{ \id(name, "_offsets"sv)[m_size + 1] = \id(name, "_offsets"sv)[m_size] + obj.\tokens(id_tokens).size(); });
   } else if (type_is_struct(type)) {
     for (auto submember : nsdms(type)) {
-      gen_push_back(submember, ^^{ \tokens(id_tokens).\id(identifier_of(submember)) });
+      gen_push_back(submember, ^^{ \tokens(id_tokens).\id(identifier_of(submember))});
     }
   } else {
-    queue_injection(^^{ new (&\tokens(id_tokens)[m_size]) typename[: \(type) :](obj.\tokens(id_tokens)); });
+    queue_injection(^^{ new (&\tokens(id_tokens)[m_size]) typename[: \(type):](obj.\tokens(id_tokens)); });
   }
 }
 
