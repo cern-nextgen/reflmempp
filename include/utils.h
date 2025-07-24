@@ -176,7 +176,9 @@ consteval std::meta::info get_scalar_type(std::meta::info t) {
 ///
 
 consteval void __report_and_inject(std::meta::info tokens) {
+#ifdef RMPP_DEBUG
   __report_tokens(tokens);
+#endif
   queue_injection(^^{ \tokens(tokens)});
 }
 

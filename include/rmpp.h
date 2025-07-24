@@ -28,7 +28,8 @@ class AoS2SoA {
 
 private:
   std::span<std::byte> storage;
-  size_t m_size, m_capacity;
+  size_t m_size;      // Number of data elements currently stored in the SoA
+  size_t m_capacity;  // Maximum number of data elements that can be stored in the SoA
 
   constexpr static inline size_t align_size(size_t size) { return ((size + Alignment - 1) / Alignment) * Alignment; }
 
@@ -46,18 +47,25 @@ private:
     constexpr auto id = identifier_of(Member);
     constexpr auto type = type_remove_cvref(type_of(Member));
 
+    size_t size = 0;
+
     if constexpr (type_is_container(type)) {
       constexpr auto value_type = get_scalar_type(type);
-      return align_size(max_inner_array_elem * sizeof(typename[:value_type:]));
+      size = align_size(max_inner_array_elem * sizeof(typename[:value_type:]));
     } else if constexpr (type_is_struct(type)) {
       size_t struct_size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> {
-        return (0 + ... + compute_size<submembers>(n));
+        size = (0 + ... + compute_size<submembers>(n));
       };
 
-      return struct_size;
+      size = struct_size;
+    } else {
+      size = align_size(n * sizeof(typename[:type_of(Member):]));
     }
 
-    return align_size(n * sizeof(typename[:type_of(Member):]));
+#ifdef RMPP_DEBUG
+    std::cout << "Size of SoA member " << id << " is " << size << " bytes\n";
+#endif
+    return size;
   }
 
   /// -------------------------------------------------------------------------------------
@@ -118,9 +126,18 @@ public:
   /// -------------------------------------------------------------------------------------
   /// Constructor for that takes the number of data elements. Uses `max_inner_array_elem`
   /// as the size allocated to inner array elements for all data elements in total.
+  /// -------
+  /// Params:
+  /// -------
+  /// buf: pointer to the storage buffer
+  /// buf_size: size of the storage buffer in bytes
+  /// capacity: number of data elements that can be stored in the SoA
   AoS2SoA(std::byte *buf, const size_t buf_size, const size_t capacity) {
+#ifdef RMPP_DEBUG
     std::cout << "storage at " << (long long)static_cast<void *>(buf) << " with capacity " << capacity << " and size "
               << buf_size << " bytes\n";
+#endif
+
     storage = std::span<std::byte>(buf, buf_size);
     m_size = 0;
     m_capacity = capacity;
