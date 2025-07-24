@@ -45,7 +45,7 @@ consteval std::meta::info gen_value_type(std::meta::info S) {
     if (type_is_container(type)) {
       auto value_type = get_scalar_type(type);
       decl_tokens.push_back(^^{ std::vector<typename[:\(value_type):]> \id(name); });
-    } else if (type_is_struct(type)) {
+    } else if (type_is_struct(type) && nsdms(type).size() > 0) {
       // Get tokens for declaring a version of the nested struct
       // with span members. Skip the declaration if the struct
       // has already been declared in the current scope.
@@ -97,14 +97,14 @@ consteval std::meta::info gen_soa_members(std::meta::info S, bool inject) {
   std::vector<std::meta::info> visited_structs;
 
   for (auto member : nsdms(S)) {
-    auto type = type_remove_cvref(type_of(member));
+    auto type = dealias(type_remove_cvref(type_of(member)));
     auto name = identifier_of(member);
 
     if (type_is_container(type)) {
       auto value_type = get_scalar_type(type);
       decl_tokens.push_back(^^{ std::span<typename[:\(value_type):]> \id(name); });
       decl_tokens.push_back(^^{ std::vector<size_t> \id(name, "_offsets"sv); });
-    } else if (type_is_struct(type)) {
+    } else if (type_is_struct(type) && nsdms(type).size() > 0) {
       // Get tokens for declaring a version of the nested struct
       // with span members. Skip the declaration if the struct
       // has already been declared in the current scope.
@@ -173,7 +173,7 @@ consteval std::meta::info gen_soa_init(std::meta::info member, std::meta::info i
 
     //   Tokens for computing the offset into the storage for the next member.
     offset_tokens = ^^{ \tokens(offset_tokens) + align_size(\tokens(id_tokens).size_bytes()) };
-  } else if (type_is_struct(type)) {
+  } else if (type_is_struct(type) && nsdms(type).size() > 0) {
     // Recursively initialize nested struct members. Add the identifier of
     // the current member to the id_tokens to access the members of the
     // nested struct.
@@ -211,7 +211,7 @@ consteval void gen_push_back(std::meta::info member, std::meta::info id_tokens) 
 
     queue_injection(
         ^^{ \id(name, "_offsets"sv)[m_size + 1] = \id(name, "_offsets"sv)[m_size] + obj.\tokens(id_tokens).size(); });
-  } else if (type_is_struct(type)) {
+  } else if (type_is_struct(type) && nsdms(type).size() > 0) {
     for (auto submember : nsdms(type)) {
       gen_push_back(submember, ^^{ \tokens(id_tokens).\id(identifier_of(submember))});
     }
@@ -240,7 +240,7 @@ consteval std::meta::info assign_aos_view_member(std::meta::info member, std::me
     auto offset = ^^{ \id(name, "_offsets"sv)[\id(identifier_of(idx))] };
     auto size = ^^{ \id(name, "_offsets"sv)[\id(identifier_of(idx)) + 1] - \tokens(offset) };
     return ^^{ \tokens(id_tokens).subspan(\tokens(offset), \tokens(size)) };
-  } else if (type_is_struct(type)) {
+  } else if (type_is_struct(type) && nsdms(type).size() > 0) {
     // Recursively initialize nested struct members. Add the identifier of
     // the current member to the id_tokens to access the members of the
     // nested struct.
