@@ -1,6 +1,3 @@
-[submodule "mdspan"]
-	path = include/mdspan
-	url = git@github.com:kokkos/mdspan.git
 [submodule "include/kokkos"]
 	path = include/kokkos
-	url = git@github.com:kokkos/mdspan.git
+	url = ../kokkos/mdspan.git
