@@ -54,11 +54,9 @@ private:
       constexpr auto value_type = get_scalar_type(type);
       size = align_size(max_inner_array_elem * sizeof(typename[:value_type:]));
     } else if constexpr (type_is_struct(type) && nsdms(type).size() > 0) {
-      size_t struct_size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> {
-        size = (0 + ... + compute_size<submembers>(n));
+      size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> {
+        return (0 + ... + compute_size<submembers>(n));
       };
-
-      size = struct_size;
     } else {
       size = align_size(n * sizeof(typename[:type_of(Member):]));
     }
