@@ -24,13 +24,12 @@ struct ValHelper {
 
 template <typename S, size_t Alignment>
 class AoS2SoA {
-  static_assert(type_is_struct(^^S) && nsdms(^^S).size() > 0,
-                "SoA can only be created for structs with data members");
+  static_assert(type_is_struct(^^S) && nsdms(^^S).size() > 0, "SoA can only be created for structs with data members");
 
 private:
   std::span<std::byte> storage;
-  size_t m_size;      // Number of data elements currently stored in the SoA
-  size_t m_capacity;  // Maximum number of data elements that can be stored in the SoA
+  size_t m_size;     // Number of data elements currently stored in the SoA
+  size_t m_capacity; // Maximum number of data elements that can be stored in the SoA
 
   constexpr static inline size_t align_size(size_t size) { return ((size + Alignment - 1) / Alignment) * Alignment; }
 
@@ -54,9 +53,7 @@ private:
       constexpr auto value_type = get_scalar_type(type);
       size = align_size(max_inner_array_elem * sizeof(typename[:value_type:]));
     } else if constexpr (type_is_struct(type) && nsdms(type).size() > 0) {
-      size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> {
-        return (0 + ... + compute_size<submembers>(n));
-      };
+      size = [:expand_all(nsdms(type)):] >> [&]<auto... submembers> { return (0 + ... + compute_size<submembers>(n)); };
     } else {
       size = align_size(n * sizeof(typename[:type_of(Member):]));
     }
@@ -76,7 +73,7 @@ private:
   /// idx: index of the element in the AoS
   /// Return: view of the element
   template <typename ViewType>
-  ViewType generate_view(const size_t idx) const {
+  [[gnu::always_inline]] ViewType generate_view(const size_t idx) const {
     consteval {
       std::meta::list_builder member_data_tokens{};
       for (auto member : nsdms(^^S)) {
@@ -155,7 +152,16 @@ public:
 
   aos_view operator[](const size_t idx) { return generate_view<aos_view>(idx); }
 
-  aos_cview operator[](const size_t idx) const { return generate_view<aos_cview>(idx); }
+  aos_cview operator[](const size_t idx) const {
+    consteval {
+      std::meta::list_builder member_data_tokens{};
+      for (auto member : nsdms(^^S)) {
+        member_data_tokens += detail::views::assign_aos_view_member(member, ^^idx, ^^{ \id(identifier_of(member))});
+      }
+
+      __report_and_inject(^^{ return aos_cview{\tokens(member_data_tokens)}; });
+    }
+  }
 
   void push_back() { m_size++; }
 
@@ -172,8 +178,10 @@ public:
       }
     }
 
-    m_size++;
+    m_size++
   }
 };
+
 } // namespace rmpp
+
 #endif
