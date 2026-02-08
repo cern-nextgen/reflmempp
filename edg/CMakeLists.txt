@@ -11,5 +11,6 @@ set(EDG_SOURCES
 foreach(src ${EDG_SOURCES})
     add_executable(${src} ${src}.cpp)
     target_compile_options(${src} PUBLIC --driver_debug)
+    target_include_directories(${src} PUBLIC include)
 endforeach()
 

@@ -1,11 +1,12 @@
-set(NO_REFL_CXX "/usr/bin/g++-14")
-set(CMAKE_CXX_COMPILER ${NO_REFL_CXX})
-message(STATUS "Compiling manual versions with ${NO_REFL_CXX} (NO_REFL_CXX)")
+message(STATUS "Compiling manual versions with ${CMAKE_CXX_COMPILER} (CMAKE_CXX_COMPILER)")
 set(CMAKE_CXX_STANDARD 26)
 
 set(MANUAL_SOURCES
-    aos2soa
+    edg_aos2soa
 )
+
+include_directories(../edg/include)
+include_directories(../edg/include/kokkos/include/mdspan)
 
 foreach(src ${MANUAL_SOURCES})
     add_executable(${src}_norefl ${src}.cpp)
