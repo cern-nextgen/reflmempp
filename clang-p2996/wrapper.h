@@ -1,3 +1,6 @@
+#ifndef WRAPPER_H
+#define WRAPPER_H
+
 /**
  * This example is adapted from Oliver Rietmann's SoA wrapper approach:
  *     https://github.com/cern-nextgen/wp1.7-soa-wrapper/commit/21d5b849ef7336bd56ebd896c9f34339a5aa75e3
@@ -136,3 +139,5 @@ struct WrapperGenerator {
 
 template <typename S, template <class> class F>
 using Wrapper = WrapperGenerator<S, F>::Wrapper;
+
+#endif // WRAPPER_H
