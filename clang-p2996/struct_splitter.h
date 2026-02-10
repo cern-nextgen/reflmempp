@@ -121,11 +121,11 @@ private:
   static constexpr auto mapping = find_in_partitions(^^ProxyRef, ^^Partitions);
 
 public:
-  PartitionedContainerContiguous(size_t n, size_t alignment) : n(n) {
-    // Allocate each partition
-    size_t total_size = (0 + ... + AlignSize(n * sizeof(T), alignment));
-    storage = static_cast<std::byte *>(std::aligned_alloc(alignment, total_size));
+  static size_t ComputeSize(size_t n, size_t alignment) {
+    return (0 + ... + AlignSize(n * sizeof(T), alignment));
+  }
 
+  PartitionedContainerContiguous(std::byte *buf, size_t n, size_t alignment) : storage(buf), n(n) {
     // Assign each partition to its location in the storage vector
     size_t offset = 0;
     template for (constexpr auto I : std::views::iota(0zu, sizeof...(T))) {
@@ -163,8 +163,6 @@ public:
         p.[:m:][i].~MemType();
       }
     }
-
-    std::free(storage);
   }
 };
 
