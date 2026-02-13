@@ -91,6 +91,8 @@ struct WrapperGenerator {
 
     ////// Constructors
 
+    Wrapper() = default;
+
     template <typename... T>
     Wrapper(std::initializer_list<T>... args) : Base(args...) {}
 
