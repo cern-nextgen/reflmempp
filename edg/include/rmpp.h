@@ -23,7 +23,7 @@ struct ValHelper {
 };
 
 template <typename S, size_t Alignment>
-class AoS2SoA {
+class Wrapper {
   static_assert(type_is_struct(^^S) && nsdms(^^S).size() > 0, "SoA can only be created for structs with data members");
 
 private:
@@ -128,7 +128,7 @@ public:
   /// buf: pointer to the storage buffer
   /// buf_size: size of the storage buffer in bytes
   /// capacity: number of data elements that can be stored in the SoA
-  AoS2SoA(std::byte *buf, const size_t buf_size, const size_t capacity) {
+  Wrapper(std::byte *buf, const size_t buf_size, const size_t capacity) {
 #ifdef RMPP_DEBUG
     std::cout << "storage at " << (long long)static_cast<void *>(buf) << " with capacity " << capacity << " and size "
               << buf_size << " bytes\n";
@@ -178,7 +178,7 @@ public:
       }
     }
 
-    m_size++
+    m_size++;
   }
 };
 

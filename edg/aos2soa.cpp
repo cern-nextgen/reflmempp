@@ -52,7 +52,7 @@ struct Particle {
   double pt2() const { return m_momentum.Pt2(); }
 };
 
-using SoA = rmpp::AoS2SoA<Particle, 64>;
+using SoA = rmpp::Wrapper<Particle, 64>;
 
 int main() {
   constexpr size_t n = 3;
