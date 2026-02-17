@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 
-set(CMAKE_CXX_COMPILER ${CLANG_2996_CXX})
-message(STATUS "Compiling clang-p2996 versions with ${CLANG_2996_CXX} (CLANG_2996_CXX)")
+set(CMAKE_CXX_COMPILER ${CLANG_P2996_CXX})
+message(STATUS "Compiling clang-p2996 versions with ${CLANG_P2996_CXX} (CLANG_P2996_CXX)")
 
 set(CMAKE_CXX_STANDARD 26)
 
