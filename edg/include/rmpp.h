@@ -77,7 +77,7 @@ private:
     consteval {
       std::meta::list_builder member_data_tokens{};
       for (auto member : nsdms(^^S)) {
-        member_data_tokens += detail::views::assign_aos_view_member(member, ^^idx, ^^{ \id(identifier_of(member))});
+        member_data_tokens += detail::views::generate_view_tokens(member, ^^{ \id(identifier_of(member))});
       }
 
       __report_and_inject(^^{ return ViewType{\tokens(member_data_tokens)}; });
@@ -152,16 +152,7 @@ public:
 
   aos_view operator[](const size_t idx) { return generate_view<aos_view>(idx); }
 
-  aos_cview operator[](const size_t idx) const {
-    consteval {
-      std::meta::list_builder member_data_tokens{};
-      for (auto member : nsdms(^^S)) {
-        member_data_tokens += detail::views::assign_aos_view_member(member, ^^idx, ^^{ \id(identifier_of(member))});
-      }
-
-      __report_and_inject(^^{ return aos_cview{\tokens(member_data_tokens)}; });
-    }
-  }
+  aos_cview operator[](const size_t idx) const { return generate_view<aos_cview>(idx); }
 
   void push_back() { m_size++; }
 

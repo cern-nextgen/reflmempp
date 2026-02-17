@@ -228,36 +228,34 @@ namespace views {
 /// Params:
 /// -------
 /// member: member to generate view for
-/// idx: idx of the current element in the AoS
 /// id_tokens: tokens for the identifier of the current (nested) member
 ///            tokens for initializing the view of the current member
-consteval std::meta::info assign_aos_view_member(std::meta::info member, std::meta::info idx,
-                                                 std::meta::info id_tokens) {
+consteval std::meta::info generate_view_tokens(std::meta::info member, std::meta::info id_tokens) {
   auto name = identifier_of(member);
   auto type = type_of(member);
 
   if (type_is_container(type)) {
-    auto offset = ^^{ \id(name, "_offsets"sv)[\id(identifier_of(idx))] };
-    auto size = ^^{ \id(name, "_offsets"sv)[\id(identifier_of(idx)) + 1] - \tokens(offset) };
+    auto offset = ^^{ \id(name, "_offsets"sv)[idx] };
+    auto size = ^^{ \id(name, "_offsets"sv)[idx + 1] - \tokens(offset) };
     return ^^{ \tokens(id_tokens).subspan(\tokens(offset), \tokens(size)) };
   } else if (type_is_struct(type) && nsdms(type).size() > 0) {
     // Recursively initialize nested struct members. Add the identifier of
     // the current member to the id_tokens to access the members of the
     // nested struct.
-    std::meta::list_builder substruct_assign{};
+    std::meta::list_builder substruct_tokens{};
     for (auto submember : nsdms(type)) {
       auto submember_id = ^^{ \tokens(id_tokens).\id(identifier_of(submember)) };
-      substruct_assign += assign_aos_view_member(submember, idx, submember_id);
+      substruct_tokens += generate_view_tokens(submember, submember_id);
     }
 
     // Nested struct members. e.g., .vecs = { .a = a[idx], .b = b[idx] }
     return ^^{
-      { \tokens(substruct_assign) }
+      { \tokens(substruct_tokens) }
     };
   }
 
   // Scalar members. e.g., .x = x[idx]
-  return ^^{ \tokens(id_tokens)[\id(identifier_of(idx))] };
+  return ^^{ \tokens(id_tokens)[idx] };
 }
 
 } // namespace views
