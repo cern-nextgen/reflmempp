@@ -62,10 +62,18 @@ consteval auto GetMemberSpecs(std::span<const int> indices) {
  */
 template <typename In, template <auto> typename Out, typename... SplitOps>
 consteval void SplitStruct(SplitOps... ops) {
-  (define_aggregate(substitute(^^Out, { std::meta::reflect_constant_array(ops)}),
-                    GetMemberSpecs<In>(ops)),
-   ...);
+  auto unpack_op = [](std::span<const int> op) {
+    std::vector<std::meta::info> unpacked;
+    for (size_t i : op) {
+      unpacked.push_back(std::meta::reflect_constant(i));
+    }
+    return unpacked;
+  };
+
+  (define_aggregate(substitute(^^Out, unpack_op(ops)),
+                    GetMemberSpecs<In>(ops)), ...);
 };
+
 // clang-format on
 
 /* Compute the aligned size for a given size and alignment. */
@@ -121,9 +129,7 @@ private:
   static constexpr auto mapping = find_in_partitions(^^ProxyRef, ^^Partitions);
 
 public:
-  static size_t ComputeSize(size_t n, size_t alignment) {
-    return (0 + ... + AlignSize(n * sizeof(T), alignment));
-  }
+  static size_t ComputeSize(size_t n, size_t alignment) { return (0 + ... + AlignSize(n * sizeof(T), alignment)); }
 
   PartitionedContainerContiguous(std::byte *buf, size_t n, size_t alignment) : storage(buf), n(n) {
     // Assign each partition to its location in the storage vector
