@@ -11,13 +11,15 @@
 #include <ranges>
 
 template <class T>
-using value_type = T;
-
+using value = T;
 template <class T>
 using reference = T &;
-
 template <class T>
 using const_reference = const T &;
+template <class T>
+using pointer = T *;
+template <class T>
+using const_pointer = const T *;
 
 //////////////// Reflection utilities
 
@@ -59,10 +61,35 @@ consteval auto expand_all(R range) {
   return substitute(^^__impl::replicator, args);
 }
 
-//////////////// Wrpapper generator
+//////////////// Wrapper generator
+
+template <class SF>
+struct RandomAccessAt {
+  size_t i;
+  template <class... Args>
+  constexpr SF operator()(Args &...args) const {
+    return {args[i]...};
+  }
+  template <class... Args>
+  constexpr SF operator()(const Args &...args) const {
+    return {args[i]...};
+  }
+};
+
+template <class SF>
+struct AggregateConstructor {
+  template <class... Args>
+  constexpr SF operator()(Args &...args) const {
+    return {args...};
+  }
+  template <class... Args>
+  constexpr SF operator()(const Args &...args) const {
+    return {args...};
+  }
+};
 
 template <typename S, template <class> class F>
-struct WrapperGenerator {
+struct WrapperGeneratorBase {
   struct Base;
 
   consteval {
@@ -71,22 +98,22 @@ struct WrapperGenerator {
   }
 
   class Wrapper : public Base {
-
-    template <typename Out, class FunctionObject>
-    Out apply_to_members(Wrapper &s, FunctionObject &&f) {
-      auto construct_output = [&]<size_t... Is>(std::index_sequence<Is...>) -> Out {
-        return {f(s.[:nsdms(^^Base)[Is]:])...};
+  public:
+    template <class FunctionObject>
+    auto apply(FunctionObject &&f) {
+      auto construct_output = [&]<size_t... Is>(std::index_sequence<Is...>) {
+        return f(this->[:nsdms(^^Base)[Is]:]...);
       };
       constexpr auto indices = std::make_index_sequence<count_members<Base>()>{};
       return construct_output(indices);
     }
 
-  public:
     //////// Random Access operators
 
-    S operator[](int i) { return apply_to_members<S>(static_cast<Wrapper &>(*this), evaluate_at{i}); }
-    WrapperGenerator<S, F>::Wrapper operator[](int i) const {
-      return apply_to_members<WrapperGenerator<S, F>::Wrapper>(static_cast<const Wrapper &>(*this), evaluate_at{i});
+    S operator[](size_t i) { return apply(RandomAccessAt<S>{i}); }
+
+    WrapperGeneratorBase<S, F>::Wrapper operator[](size_t i) const {
+      return apply(RandomAccessAt<WrapperGeneratorBase<S, F>::Wrapper>{i});
     }
 
     ////// Constructors
@@ -104,39 +131,26 @@ struct WrapperGenerator {
     ////// Conversion constructors
     template <typename T>
       requires(parent_of(^^T) != parent_of(^^Wrapper))
-    Wrapper(T &other)
-        : Wrapper([:expand_all(nsdms(type_of(bases_of(^^T, std::meta::access_context::unchecked())[0]))
-                               ):] >> [&]<auto... members> { return Base{other.[:members:]...}; }) {}
+    Wrapper(T &other) : Wrapper(other.apply(AggregateConstructor<Base>{})) {}
 
     template <typename T>
       requires(parent_of(^^T) != parent_of(^^Wrapper))
-    Wrapper(const T &other)
-        : Wrapper([:expand_all(nsdms(type_of(bases_of(^^T, std::meta::access_context::unchecked())[0]))
-                               ):] >> [&]<auto... members> { return Base{other.[:members:]...}; }) {}
-
-  private:
-    //////// Helper
-
-    template <template <class> class F_out>
-    struct cast {
-      template <class T>
-      F_out<T> operator()(F<T> &member) const {
-        return member;
-      }
-    };
-
-    struct evaluate_at {
-      int i;
-      template <class T>
-      reference<T> operator()(F<T> &member) const {
-        return member[i];
-      }
-      template <class T>
-      const_reference<T> operator()(const F<T> &member) const {
-        return member[i];
-      }
-    };
+    Wrapper(const T &other) : Wrapper(other.apply(AggregateConstructor<Base>{})) {}
   };
+};
+
+template <typename T, template <class> class F>
+struct WrapperGenerator : public WrapperGeneratorBase<T, F> {
+  using Base = WrapperGeneratorBase<T, F>;
+  using typename Base::Wrapper;
+};
+
+template <typename T>
+struct WrapperGenerator<T, pointer> : public WrapperGeneratorBase<T, pointer> {
+  using Base = WrapperGeneratorBase<T, pointer>;
+  using typename Base::Wrapper;
+
+  // TODO: iterator support
 };
 
 template <typename S, template <class> class F>

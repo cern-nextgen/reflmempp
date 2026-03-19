@@ -6,11 +6,19 @@
 
 #include "wrapper.h"
 
+#include <assert.h>
 #include <iostream>
 #include <span>
 #include <vector>
+#include <algorithm>
 
-///////////////////
+#define EXPECT_TRUE(arg)                                                                                               \
+  do {                                                                                                                 \
+    if (!(arg)) {                                                                                                      \
+      std::cout << "Unexpected false at " << __FILE__ << ", " << __LINE__ << ", " << __func__ << ": " << #arg          \
+                << std::endl;                                                                                          \
+    }                                                                                                                  \
+  } while (false);
 
 struct Point {
   float &x;
@@ -21,22 +29,30 @@ struct Point {
 };
 
 using PointSoA = Wrapper<Point, std::vector>;
-using PointVal = Wrapper<Point, value_type>;
+using PointVal = Wrapper<Point, value>;
 using PointSpan = Wrapper<Point, std::span>;
+using PointSoP = Wrapper<Point, pointer>;
 
 int main() {
   PointVal p = {0.0f, 1, 2.0};
-  PointSoA q = {{0.0f, 0.0f, 0.0f}, {1, 1, 1}, {2.0, 2.0, 2.0}};
+  EXPECT_TRUE(p.x == 0.0f && p.y == 1 && p.z == 2.0);
 
-  PointSpan s = q;
-  s[1].x = 213445;
+  PointSoA soa = {{0.0f, 1.0f, 2.0f}, {5, 4, 3}, {12.0, 21.0, 2.0}};
+  EXPECT_TRUE(soa[0].x == 0.0f && soa[0].y == 5 && soa[0].z == 12.0);
+  EXPECT_TRUE(soa[1].x == 1.0f && soa[1].y == 4 && soa[1].z == 21.0);
+  EXPECT_TRUE(soa[2].x == 2.0f && soa[2].y == 3 && soa[2].z == 2.0);
+  EXPECT_TRUE(soa[2].sum() == 2.0f + 3 + 2.0);
 
-  q[0].z = 42;
-  std::cout << "q[0] = { x: " << q[0].x << ", y: " << q[0].y << ", z: " << q[0].z << " }" << std::endl;
-  std::cout << "q[1] = { x: " << q[1].x << ", y: " << q[1].y << ", z: " << q[1].z << " }" << std::endl;
-  std::cout << "q[2] = { x: " << q[2].x << ", y: " << q[2].y << ", z: " << q[2].z << " }" << std::endl;
-  std::cout << "sum q[2] == " << q[2].sum() << std::endl;
+  PointSpan span = soa;
+  span[1].x = 213445;
+  EXPECT_TRUE(span[1].x == 213445 && span[1].x == soa[1].x);
 
-  std::cout << "q.y[1] = " << q.y[1] << std::endl;
+  PointSoP sop = {soa.x.data(), soa.y.data(), soa.z.data()};
+  EXPECT_TRUE(sop[0].x == 0.0f && sop[0].y == 5 && sop[0].z == 12.0);
+  EXPECT_TRUE(sop[1].x == 213445 && sop[1].y == 4 && sop[1].z == 21.0);
+  EXPECT_TRUE(sop[2].x == 2.0f && sop[2].y == 3 && sop[2].z == 2.0);
+
+  // std::ranges::sort(sop);
+
   return 0;
 }
