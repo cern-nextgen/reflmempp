@@ -6,18 +6,18 @@
 
 #include "wrapper.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <iostream>
 #include <span>
 #include <vector>
-#include <algorithm>
 
-#define EXPECT_TRUE(arg)                                                                                               \
-  do {                                                                                                                 \
-    if (!(arg)) {                                                                                                      \
-      std::cout << "Unexpected false at " << __FILE__ << ", " << __LINE__ << ", " << __func__ << ": " << #arg          \
-                << std::endl;                                                                                          \
-    }                                                                                                                  \
+#define EXPECT_TRUE(arg)                                                       \
+  do {                                                                         \
+    if (!(arg)) {                                                              \
+      std::cout << "Unexpected false at " << __FILE__ << ", " << __LINE__      \
+                << ", " << __func__ << ": " << #arg << std::endl;              \
+    }                                                                          \
   } while (false);
 
 struct Point {
@@ -29,9 +29,9 @@ struct Point {
 };
 
 using PointSoA = Wrapper<Point, std::vector>;
-using PointVal = Wrapper<Point, value>;
+using PointVal = Wrapper<Point, MemLayout::value>;
 using PointSpan = Wrapper<Point, std::span>;
-using PointSoP = Wrapper<Point, pointer>;
+using PointSoP = Wrapper<Point, MemLayout::pointer>;
 
 int main() {
   PointVal p = {0.0f, 1, 2.0};
@@ -52,7 +52,13 @@ int main() {
   EXPECT_TRUE(sop[1].x == 213445 && sop[1].y == 4 && sop[1].z == 21.0);
   EXPECT_TRUE(sop[2].x == 2.0f && sop[2].y == 3 && sop[2].z == 2.0);
 
-  // std::ranges::sort(sop);
+  Wrapper<Point, MemLayout::reference> ref = soa[2];
+  EXPECT_TRUE(ref.sum() == 2.0f + 3 + 2.0);
+
+  std::sort(sop, sop + 3);
+  EXPECT_TRUE(sop[0].x == 0.0f && sop[0].y == 5 && sop[0].z == 12.0);
+  EXPECT_TRUE(sop[1].x == 2.0f && sop[1].y == 3 && sop[1].z == 2.0);
+  EXPECT_TRUE(sop[2].x == 213445 && sop[2].y == 4 && sop[2].z == 21.0);
 
   return 0;
 }
