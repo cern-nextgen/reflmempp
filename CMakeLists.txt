@@ -7,4 +7,5 @@ project(
 
 add_subdirectory(manual)
 add_subdirectory(edg)
-add_subdirectory(clang-p2996)
+add_subdirectory(p2996)
+add_subdirectory(wrapper)
