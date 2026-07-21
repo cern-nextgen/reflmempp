@@ -7,41 +7,40 @@
  * This version reduces code duplication by using C++26 reflection features.
  */
 
+#ifdef __clang__
 #include <experimental/meta>
+#else
+#include <meta>
+#endif
+
 #include <ranges>
+#include <string_view>
 
 namespace MemLayout {
-using ptrdiff_t = decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr));
+using size_t = decltype(sizeof(0));
+using ptrdiff_t = decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));
+
+template <class T> using value = T;
+
+template <class T> using reference = T&;
+template <class T> using const_reference = const T&;
+template <class T> using reference_restrict = T& __restrict__;
+template <class T> using const_reference_restrict = const T& __restrict__;
+template <class T> using pointer = T*;
+template <class T> using const_pointer = const T*;
 
 template <class T>
-using value = T;
-template <class T>
-using reference = T &;
-template <class T>
-using const_reference = const T &;
-template <class T>
-using pointer = T *;
-template <class T>
-using const_pointer = const T *;
-
-template <class T>
-using reference_restrict = T &__restrict__;
-template <class T>
-using const_reference_restrict = const T &__restrict__;
-template <class T>
-using pointer_restrict = T *__restrict__;
-template <class T>
-using const_pointer_restrict = const T *__restrict__;
+requires true
+using parent_type = reference<T>;
 
 //////////////// Reflection utilities
+consteval auto nsdms(std::meta::info type) -> std::vector<std::meta::info> {
+  return nonstatic_data_members_of(type, std::meta::access_context::unchecked());
+}
 
 template <class S>
 constexpr std::size_t count_members() {
-  return nonstatic_data_members_of(^^S, std::meta::access_context::unchecked()).size();
-}
-
-consteval auto nsdms(std::meta::info type) -> std::vector<std::meta::info> {
-  return nonstatic_data_members_of(type, std::meta::access_context::unchecked());
+  return nsdms(^^S).size();
 }
 
 template <class F>
@@ -77,83 +76,100 @@ consteval auto expand_all(R range) {
 
 template <class SF>
 struct RandomAccessAt {
-  size_t i;
-  template <class... Args>
-  constexpr SF operator()(Args &...args) const {
-    return {args[i]...};
-  }
-  template <class... Args>
-  constexpr SF operator()(const Args &...args) const {
-    return {args[i]...};
-  }
+    MemLayout::size_t i;
+    template <class... Args>
+    constexpr SF operator()(Args& ...args) const { return {args[i]...}; }
+    template <class... Args>
+    constexpr SF operator()(const Args& ...args) const { return {args[i]...}; }
 };
 
 template <class SF>
 struct GetPointer {
-  template <class... Args>
-  constexpr SF operator()(Args &...args) const {
-    return {&args...};
-  }
-  template <class... Args>
-  constexpr SF operator()(const Args &...args) const {
-    return {&args...};
-  }
+    template <class... Args>
+    constexpr SF operator()(Args& ...args) const { return {&args...}; }
+    template <class... Args>
+    constexpr SF operator()(const Args& ...args) const { return {&args...}; }
 };
+
 
 template <class SF>
 struct AggregateConstructor {
-  template <class... Args>
-  constexpr SF operator()(Args &...args) const {
-    return {args...};
-  }
-  template <class... Args>
-  constexpr SF operator()(const Args &...args) const {
-    return {args...};
-  }
+    template <class... Args>
+    constexpr SF operator()(Args& ...args) const { return {args...}; }
+    template <class... Args>
+    constexpr SF operator()(const Args& ...args) const { return {args...}; }
 };
 
 template <class SF>
 struct PreIncrement {
-  template <class... Args>
-  constexpr SF operator()(Args &...args) const {
-    return {++args...};
-  }
+    template <class... Args>
+    constexpr SF operator()(Args& ...args) const { return {++args...}; }
 };
 
 template <class SF>
 struct PreDecrement {
-  template <class... Args>
-  constexpr SF operator()(Args &...args) const {
-    return {--args...};
-  }
+    template <class... Args>
+    constexpr SF operator()(Args& ...args) const { return {--args...}; }
 };
 
 template <class SF>
 struct Advance {
-  ptrdiff_t i;
-  template <class... Args>
-  constexpr SF operator()(const Args &...args) const {
-    return {(args + i)...};
-  }
+    ptrdiff_t i;
+    template <class... Args>
+    constexpr SF operator()(const Args& ...args) const { return {(args + i)...}; }
 };
 
 struct CopyAssignment {
-  template <class Left, class Right>
-  constexpr Left &operator()(Left &left, const Right &right) const {
-    return left = right;
-  }
+    template <class Left, class Right>
+    constexpr Left& operator()(Left& left, const Right& right) const { return left = right; }
 };
 
 //////////////// Wrapper Generator
+template <typename S, template <class> class F>
+struct WrapperGenerator; // Forward Declaration
+
+template <typename T>
+concept is_wrapper =
+#ifdef __clang__
+  has_identifier(^^T) && identifier_of(^^T) == "Wrapper";
+#else
+  has_parent(^^T) && has_template_arguments(parent_of(^^T))
+  && template_of(parent_of(^^T)) == ^^WrapperGenerator;
+#endif
+
+consteval bool is_wrapper_type(std::meta::info r) {
+  return extract<bool>(substitute(^^is_wrapper, { r }));
+}
+
+consteval auto get_wrapper(std::meta::info wg) -> std::meta::info {
+  for (auto m : members_of(wg, std::meta::access_context::unchecked())) {
+    if (is_wrapper_type(m)) {
+      return m;
+    }
+  }
+
+  return wg;
+}
+
 template <typename S, template <class> class F>
 struct WrapperGeneratorBase {
   struct MembersImpl;
 
   consteval {
-    if (^^F != ^^reference) {
-      define_aggregate(^^MembersImpl, transform_members(^^S, [](std::meta::info type) {
-        return substitute(^^F, {remove_cvref(type)});
-      }));
+    if ((^^F != ^^reference) && (^^F != ^^const_reference)
+     && (^^F != ^^reference_restrict) && (^^F != ^^const_reference_restrict)) {
+      define_aggregate(^^MembersImpl, nsdms(^^S) | std::views::transform([=](std::meta::info member) {
+          auto type = dealias(remove_cvref(type_of(member)));
+          if (is_wrapper_type(type)
+              && template_arguments_of(parent_of(type))[1] == ^^parent_type
+            ) {
+              return data_member_spec(
+                  get_wrapper(substitute(^^WrapperGenerator, { template_arguments_of(parent_of(type))[0], ^^F })),
+                  {.name = identifier_of(member) });
+          } else {
+              return data_member_spec(substitute(^^F, { type }), {.name = identifier_of(member)});
+          }
+        }));
     }
   }
 
@@ -212,7 +228,7 @@ struct WrapperGeneratorBase {
     }
 
     ////// Constructors
-    constexpr Wrapper() = default;
+    constexpr Wrapper() : Members() {};
     constexpr Wrapper(Members m) : Members(m) {}
 
     template <typename... T>
@@ -458,9 +474,24 @@ struct WrapperGenerator<S, const_pointer> : public WrapperGeneratorBase<S, const
     constexpr Wrapper &operator-=(ptrdiff_t i) { return *this = *this - i; }
   };
 };
-} // namespace MemLayout
 
 template <typename S, template <class> class F>
 using Wrapper = MemLayout::WrapperGenerator<S, F>::Wrapper;
+
+template <class S>
+using RecurseWrap = Wrapper<S, parent_type>;
+
+enum Flag { soa, aos };
+
+template <typename S, template <class> class F, Flag L>
+struct interface;
+
+template <typename S, template <class> class F>
+struct interface<S, F, Flag::aos> { using type = F<Wrapper<S, F>>; };
+
+template <typename S, template <class> class F>
+struct interface<S, F, Flag::soa> { using type = Wrapper<S, F>; };
+
+} // namespace MemLayout
 
 #endif // WRAPPER_H
