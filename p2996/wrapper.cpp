@@ -30,7 +30,7 @@ struct Point {
   float &x;
   int &y;
   double &z;
-  MemLayout::RecurseWrap<Inner> inner;
+  Inner inner;
 
   double sum() const { return x + y + z; };
 };
