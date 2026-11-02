@@ -5,6 +5,8 @@ project(
     LANGUAGES CXX
 )
 
+include(GoogleTest)
+
 add_subdirectory(manual)
 add_subdirectory(edg)
 add_subdirectory(p2996)

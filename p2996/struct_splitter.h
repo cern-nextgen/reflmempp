@@ -2,9 +2,15 @@
 #ifndef STRUCT_SPLITTER_H
 #define STRUCT_SPLITTER_H
 
+#ifdef __clang__
+#include <experimental/meta>
+#else
+#include <meta>
+#endif
+
 #include <array>
 #include <cassert>
-#include <experimental/meta>
+#include <charconv>
 #include <iostream>
 #include <new>
 #include <ranges>
@@ -60,7 +66,7 @@ consteval auto GetMemberSpecs(std::span<const int> indices) {
  * for each SplitOp provided, containing only the members of struct In, in the
  * order specified by the SplitOp.
  */
-template <typename In, template <auto> typename Out, typename... SplitOps>
+template <typename In, template <size_t> typename Out, typename... SplitOps>
 consteval void SplitStruct(SplitOps... ops) {
   auto unpack_op = [](std::span<const int> op) {
     std::vector<std::meta::info> unpacked;
@@ -70,11 +76,39 @@ consteval void SplitStruct(SplitOps... ops) {
     return unpacked;
   };
 
-  (define_aggregate(substitute(^^Out, unpack_op(ops)),
-                    GetMemberSpecs<In>(ops)), ...);
+  (define_aggregate(substitute(^^Out, unpack_op(ops)), GetMemberSpecs<In>(ops)), ...);
 };
 
 // clang-format on
+
+/* Convert an integer to a string. Unlike std::to_string, this is usable in constant
+   evaluation (std::to_chars is constexpr for integers since C++23) */
+constexpr std::string to_str(size_t v) {
+  char buf[20]{}; // Enough digits for any 64-bit value.
+  auto r = std::to_chars(buf, buf + sizeof buf, v);
+  return std::string(buf, r.ptr);
+}
+
+/* Convert a list of SplitOps to a string. */
+template <typename... Ops>
+constexpr std::string GetSplitOpsString() {
+  auto template_args_string = []<std::meta::info R, size_t I>() {
+    std::string r = "";
+
+    if (I != 0)
+      r += "_";
+
+    template for (constexpr auto a :
+                  define_static_array(template_arguments_of(R))) {
+      r += to_str(extract<size_t>(a));
+    }
+    return r;
+  };
+
+  return [&]<size_t... Is>(std::index_sequence<Is...>) {
+    return (template_args_string.template operator()<^^Ops, Is>() + ...);
+  }(std::make_index_sequence<sizeof...(Ops)>());
+}
 
 /* Compute the aligned size for a given size and alignment. */
 inline size_t AlignSize(size_t size, size_t alignment) {
@@ -87,7 +121,9 @@ inline size_t AlignSize(size_t size, size_t alignment) {
  * Returns a static array of pairs, where each pair contains the partition index
  * and the member index within that partition.
  */
+#ifdef __clang__
 #pragma clang diagnostic ignored "-Wreturn-type"
+#endif
 consteval auto find_in_partitions(std::meta::info original_type, std::meta::info partitioned_type) {
   auto original_members = nsdms(original_type);
   auto partitions = nsdms(partitioned_type);
@@ -120,7 +156,7 @@ private:
                 "PartitionedContainerContiguous: Total number of members in substructures"
                 "must equal number of members in ProxyRef");
   struct Partitions;
-  consteval { define_aggregate(^^Partitions, {data_member_spec(substitute(^^std::span, {^^T}))...}); }
+  consteval { define_aggregate(^^Partitions, {data_member_spec(substitute(^^std::span, {^^T}), { .name=std::string("p") + GetSplitOpsString<T>() })...}); }
 
   Partitions p;
   std::byte *storage;
@@ -183,7 +219,7 @@ private:
                 "PartitionedContainer: Total number of members in partitions "
                 "must equal number of members in ProxyRef");
   struct Partitions;
-  consteval { define_aggregate(^^Partitions, {data_member_spec(add_pointer(^^T))...}); }
+  consteval { define_aggregate(^^Partitions, { data_member_spec(add_pointer(^^T), { .name=std::string("p") + GetSplitOpsString<T>() })... }); }
 
   Partitions p;
   size_t n;
