@@ -201,7 +201,7 @@ public:
       constexpr auto m = nsdms(^^Partitions)[I];
 
       // Need to deallocate each element individually because it is constructed using placement new.
-      for (size_t i = n - 1; i == 0; --i) {
+      for (size_t i = n - 1; i >= 0; --i) {
         p.[:m:][i].~MemType();
       }
     }
